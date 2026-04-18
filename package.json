@@ -1,6 +1,6 @@
 {
 	"name": "@joshuafolkken/config",
-	"version": "0.12.0",
+	"version": "0.13.0",
 	"type": "module",
 	"license": "MIT",
 	"packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
@@ -54,8 +54,14 @@
 		"./eslint/vanilla": "./eslint/vanilla.js",
 		"./eslint/sveltekit": "./eslint/sveltekit.js",
 		"./prettier": "./prettier/index.js",
-		"./tsconfig/base": "./tsconfig/base.jsonc",
-		"./tsconfig/sveltekit": "./tsconfig/sveltekit.jsonc",
+		"./tsconfig/base": {
+			"types": "./tsconfig/base.jsonc",
+			"default": "./tsconfig/base.jsonc"
+		},
+		"./tsconfig/sveltekit": {
+			"types": "./tsconfig/sveltekit.jsonc",
+			"default": "./tsconfig/sveltekit.jsonc"
+		},
 		"./cspell": "./cspell/index.yaml",
 		"./playwright/base": "./templates/playwright/base.ts"
 	},
