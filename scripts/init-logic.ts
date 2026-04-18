@@ -19,7 +19,6 @@ const AI_COPY_FILES: ReadonlyArray<string> = [
 	'.cursorrules',
 	'.coderabbit.yaml',
 	'.gitattributes',
-	'.gitignore',
 	'.mcp.json',
 	'.ncurc.json',
 	'.prettierignore',
@@ -35,6 +34,15 @@ const AI_COPY_FILES: ReadonlyArray<string> = [
 	'.github/pull_request_template.md',
 ]
 
+interface FileCopyMapping {
+	src: string
+	dest: string
+}
+
+const AI_COPY_FILE_MAPPINGS: ReadonlyArray<FileCopyMapping> = [
+	{ src: 'templates/gitignore', dest: '.gitignore' },
+]
+
 const AI_COPY_DIRECTORIES: ReadonlyArray<string> = ['prompts', 'scripts-ai']
 
 const LEFTHOOK_EXTENDS: Record<ProjectType, string> = {
@@ -43,8 +51,8 @@ const LEFTHOOK_EXTENDS: Record<ProjectType, string> = {
 }
 
 const TSCONFIG_EXTENDS: Record<ProjectType, string> = {
-	sveltekit: '@joshuafolkken/config/tsconfig/sveltekit',
-	vanilla: '@joshuafolkken/config/tsconfig/base',
+	sveltekit: './node_modules/@joshuafolkken/config/tsconfig/sveltekit.jsonc',
+	vanilla: './node_modules/@joshuafolkken/config/tsconfig/base.jsonc',
 }
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -264,6 +272,10 @@ function get_ai_copy_files(): ReadonlyArray<string> {
 	return AI_COPY_FILES
 }
 
+function get_ai_copy_file_mappings(): ReadonlyArray<FileCopyMapping> {
+	return AI_COPY_FILE_MAPPINGS
+}
+
 function get_ai_copy_directories(): ReadonlyArray<string> {
 	return AI_COPY_DIRECTORIES
 }
@@ -305,10 +317,11 @@ const init_logic = {
 	get_cspell_import_value,
 	get_npmrc_lines,
 	get_ai_copy_files,
+	get_ai_copy_file_mappings,
 	get_ai_copy_directories,
 	get_suggested_scripts,
 	merge_package_scripts,
 }
 
 export { init_logic }
-export type { ProjectType }
+export type { FileCopyMapping, ProjectType }

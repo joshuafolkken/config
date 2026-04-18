@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { init_logic } from './init-logic'
 
+const GITIGNORE_DEST = '.gitignore'
+
 describe('generate_eslint_config', () => {
 	it('returns sveltekit config for sveltekit type', () => {
 		expect(init_logic.generate_eslint_config('sveltekit')).toContain('create_sveltekit_config')
@@ -26,18 +28,29 @@ describe('generate_prettier_config', () => {
 })
 
 describe('generate_tsconfig', () => {
-	it('sveltekit includes svelte-kit extends and our config', () => {
+	it('sveltekit includes svelte-kit extends and our config as direct jsonc path', () => {
 		const result = init_logic.generate_tsconfig('sveltekit')
 
 		expect(result).toContain('.svelte-kit/tsconfig.json')
-		expect(result).toContain('@joshuafolkken/config/tsconfig/sveltekit')
+		expect(result).toContain('node_modules/@joshuafolkken/config/tsconfig/sveltekit.jsonc')
 	})
 
-	it('vanilla includes only our config', () => {
+	it('vanilla includes only our config as direct jsonc path', () => {
 		const result = init_logic.generate_tsconfig('vanilla')
 
-		expect(result).toContain('@joshuafolkken/config/tsconfig/base')
+		expect(result).toContain('node_modules/@joshuafolkken/config/tsconfig/base.jsonc')
 		expect(result).not.toContain('.svelte-kit')
+	})
+})
+
+describe('get_tsconfig_extends_entry', () => {
+	it('returns direct node_modules jsonc path for each project type', () => {
+		expect(init_logic.get_tsconfig_extends_entry('sveltekit')).toBe(
+			'./node_modules/@joshuafolkken/config/tsconfig/sveltekit.jsonc',
+		)
+		expect(init_logic.get_tsconfig_extends_entry('vanilla')).toBe(
+			'./node_modules/@joshuafolkken/config/tsconfig/base.jsonc',
+		)
 	})
 })
 
@@ -91,7 +104,7 @@ describe('get_ai_copy_files', () => {
 		expect(result).toContain('.cursorrules')
 		expect(result).toContain('.coderabbit.yaml')
 		expect(result).toContain('.gitattributes')
-		expect(result).toContain('.gitignore')
+		expect(result).not.toContain(GITIGNORE_DEST)
 		expect(result).toContain('.mcp.json')
 		expect(result).toContain('.ncurc.json')
 		expect(result).toContain('.prettierignore')
@@ -105,6 +118,18 @@ describe('get_ai_copy_files', () => {
 		expect(result).toContain('sonar-project.properties')
 		expect(result).toContain('tsconfig.sonar.json')
 		expect(result).toContain('wrangler.jsonc')
+	})
+})
+
+describe('get_ai_copy_file_mappings', () => {
+	it('includes gitignore template mapping', () => {
+		const result = init_logic.get_ai_copy_file_mappings()
+
+		expect(result).toContainEqual({ src: 'templates/gitignore', dest: GITIGNORE_DEST })
+	})
+
+	it('does not duplicate gitignore in ai_copy_files', () => {
+		expect(init_logic.get_ai_copy_files()).not.toContain(GITIGNORE_DEST)
 	})
 })
 
