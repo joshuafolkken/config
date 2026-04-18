@@ -183,6 +183,15 @@ describe('merge_json_extends', () => {
 
 		expect(result).toBe(content)
 	})
+
+	it('handles tsconfig.json with JSONC line comments', () => {
+		const content = '{\n\t// compiler options\n\t"extends": ["existing"]\n}'
+		const result = JSON.parse(init_logic.merge_json_extends(content, 'my-config')) as {
+			extends: unknown
+		}
+
+		expect(result.extends).toStrictEqual(['existing', 'my-config'])
+	})
 })
 
 describe('merge_json_array_field', () => {
@@ -208,6 +217,15 @@ describe('merge_json_array_field', () => {
 
 		expect(result).toBe(content)
 	})
+
+	it('handles extensions.json with JSONC line comments', () => {
+		const content = '{\n\t// extensions\n\t"recommendations": ["a"]\n}'
+		const result = JSON.parse(
+			init_logic.merge_json_array_field(content, 'recommendations', ['b']),
+		) as { recommendations: unknown }
+
+		expect(result.recommendations).toStrictEqual(['a', 'b'])
+	})
 })
 
 describe('merge_json_object', () => {
@@ -232,6 +250,17 @@ describe('merge_json_object', () => {
 		const result = init_logic.merge_json_object(content, { a: 99 })
 
 		expect(result).toBe(content)
+	})
+
+	it('handles settings.json with JSONC line comments', () => {
+		const content = '{\n\t// settings\n\t"a": 1\n}'
+		const result = JSON.parse(init_logic.merge_json_object(content, { b: 2 })) as {
+			a: number
+			b: number
+		}
+
+		expect(result.a).toBe(1)
+		expect(result.b).toBe(2)
 	})
 })
 
