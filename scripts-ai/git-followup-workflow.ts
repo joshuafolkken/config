@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 import { parseArgs } from 'node:util'
 import { git_branch } from '../scripts/git/git-branch'
 import { git_error } from '../scripts/git/git-error'

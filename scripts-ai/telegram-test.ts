@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 import { execFile } from 'node:child_process'
 import { parseArgs, promisify } from 'node:util'
 import { telegram_notify } from '../scripts/git/telegram-notify'

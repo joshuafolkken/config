@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 import { parseArgs } from 'node:util'
 import { git_branch } from '../scripts/git/git-branch'
 import { git_commit } from '../scripts/git/git-commit'
