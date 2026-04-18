@@ -4,16 +4,40 @@ Shared toolchain config for TypeScript / SvelteKit projects.
 
 Covers: ESLint · Prettier · TypeScript · Lefthook · cspell · VS Code · AI files (CLAUDE.md, AGENTS.md, GEMINI.md, prompts/, scripts-ai/)
 
-## Install
+## Authentication
 
-```bash
-pnpm add -D @joshuafolkken/config
-```
+GitHub Packages requires authentication even for public packages. Set up auth before installing:
+
+1. Add the auth token to `.npmrc`:
+
+   ```
+   //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+   ```
+
+2. Export the token in your shell (uses your existing `gh` CLI session):
+
+   ```bash
+   export NODE_AUTH_TOKEN=$(gh auth token)
+   ```
+
+   If `gh auth token` fails or installation returns a 401, your token may be missing the `read:packages` scope. Re-authenticate with:
+
+   ```bash
+   gh auth login --scopes read:packages
+   ```
+
+## Install
 
 Add the registry to `.npmrc` first (or let `config-init` do it):
 
 ```
 @joshuafolkken:registry=https://npm.pkg.github.com
+```
+
+Then install:
+
+```bash
+pnpm add -D @joshuafolkken/config
 ```
 
 ## Setup
