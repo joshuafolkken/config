@@ -1,3 +1,5 @@
+import strip_json_comments from 'strip-json-comments'
+
 type ProjectType = 'sveltekit' | 'vanilla'
 
 const NPMRC_LINES: ReadonlyArray<string> = [
@@ -168,8 +170,12 @@ function normalize_extends(value: string | Array<string> | undefined): Array<str
 	return [...value]
 }
 
+function parse_jsonc(content: string): unknown {
+	return JSON.parse(strip_json_comments(content, { trailingCommas: true }))
+}
+
 function merge_json_extends(content: string, entry: string): string {
-	const parsed = JSON.parse(content) as WithExtends & Record<string, unknown>
+	const parsed = parse_jsonc(content) as WithExtends & Record<string, unknown>
 	const existing = normalize_extends(parsed.extends)
 	if (existing.includes(entry)) return content
 	parsed.extends = [...existing, entry]
@@ -182,7 +188,7 @@ function merge_json_array_field(
 	key: string,
 	values: ReadonlyArray<string>,
 ): string {
-	const parsed = JSON.parse(content) as Record<string, unknown>
+	const parsed = parse_jsonc(content) as Record<string, unknown>
 	const existing = (parsed[key] as Array<string> | undefined) ?? []
 	const to_add = values.filter((value) => !existing.includes(value))
 	if (to_add.length === 0) return content
@@ -192,7 +198,7 @@ function merge_json_array_field(
 }
 
 function merge_json_object(content: string, updates: Record<string, unknown>): string {
-	const parsed = JSON.parse(content) as Record<string, unknown>
+	const parsed = parse_jsonc(content) as Record<string, unknown>
 	let has_changes = false
 
 	for (const [key, value] of Object.entries(updates)) {
@@ -250,7 +256,7 @@ function get_suggested_scripts(type: ProjectType): Record<string, string> {
 }
 
 function merge_package_scripts(content: string, scripts: Record<string, string>): string {
-	const parsed = JSON.parse(content) as WithScripts
+	const parsed = parse_jsonc(content) as WithScripts
 	const existing = parsed.scripts ?? {}
 	const to_add = Object.entries(scripts).filter(([key]) => !(key in existing))
 
