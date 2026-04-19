@@ -1,5 +1,13 @@
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { COMMAND_MAP, josh_logic } from './josh-logic'
+
+const PACKAGE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
+const PACKAGE_VERSION = (
+	JSON.parse(readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8')) as { version: string }
+).version
 
 const ENV_FILE_FLAG = '--env-file=.env'
 
@@ -41,6 +49,10 @@ describe('COMMAND_MAP category', () => {
 describe('josh_logic.format_help', () => {
 	it('includes the toolkit header with author name', () => {
 		expect(josh_logic.format_help()).toContain('Joshua Folkken')
+	})
+
+	it('includes the package version in the header', () => {
+		expect(josh_logic.format_help()).toContain(`v${PACKAGE_VERSION}`)
 	})
 
 	it('includes all command names', () => {
