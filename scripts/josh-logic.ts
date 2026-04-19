@@ -1,9 +1,19 @@
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const PACKAGE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const COLUMN_WIDTH = 24
+
+function read_package_version(): string {
+	const parsed = JSON.parse(readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8')) as {
+		version: string
+	}
+
+	return parsed.version
+}
+
 const ENV_FILE_FLAGS: ReadonlyArray<string> = ['--env-file=.env']
 
 type CommandCategory =
@@ -101,7 +111,7 @@ const COMMAND_MAP: Record<string, CommandEntry> = {
 	},
 }
 
-const HEADER = "josh — Joshua Folkken's dev toolkit"
+const HEADER = `josh v${read_package_version()} — Joshua Folkken's dev toolkit`
 const USAGE = 'Usage: josh <command> [options]'
 
 function format_command_line(cmd: string, entry: CommandEntry): string {
