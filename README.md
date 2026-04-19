@@ -76,7 +76,7 @@ pnpm exec josh sync
 
 ## CLI commands
 
-A single `josh` command is available in `node_modules/.bin/` after installation. Run `josh help` to list all subcommands:
+A single `josh` command is available in `node_modules/.bin/` after installation. Run `pnpm exec josh help` to list all subcommands:
 
 | Subcommand                  | Description                              |
 | --------------------------- | ---------------------------------------- |

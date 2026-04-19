@@ -4,10 +4,12 @@ import { fileURLToPath } from 'node:url'
 
 const PACKAGE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const COLUMN_WIDTH = 24
+const ENV_FILE_FLAGS: ReadonlyArray<string> = ['--env-file=.env']
 
 interface CommandEntry {
 	script: string
 	description: string
+	tsx_arguments?: ReadonlyArray<string>
 }
 
 const COMMAND_MAP: Record<string, CommandEntry> = {
@@ -17,10 +19,12 @@ const COMMAND_MAP: Record<string, CommandEntry> = {
 	'git-followup': {
 		script: 'scripts-ai/git-followup-workflow.ts',
 		description: 'Follow-up git workflow',
+		tsx_arguments: ENV_FILE_FLAGS,
 	},
 	'telegram-test': {
 		script: 'scripts-ai/telegram-test.ts',
 		description: 'Send Telegram test notification',
+		tsx_arguments: ENV_FILE_FLAGS,
 	},
 	prep: { script: 'scripts-ai/prep.ts', description: 'Pre-implementation preparation' },
 	'issue-prep': { script: 'scripts-ai/issue-prep.ts', description: 'Fetch GitHub issue details' },
@@ -56,14 +60,16 @@ function format_help(): string {
 }
 
 function run_command(cmd: string, subcommand_arguments: Array<string>): number {
-	const entry = COMMAND_MAP[cmd]
+	const entry = Object.hasOwn(COMMAND_MAP, cmd) ? COMMAND_MAP[cmd] : undefined
 
 	if (!entry) return -1
 
 	/* eslint-disable sonarjs/no-os-command-from-path */
-	const result = spawnSync('tsx', [path.join(PACKAGE_DIR, entry.script), ...subcommand_arguments], {
-		stdio: 'inherit',
-	})
+	const result = spawnSync(
+		'tsx',
+		[...(entry.tsx_arguments ?? []), path.join(PACKAGE_DIR, entry.script), ...subcommand_arguments],
+		{ stdio: 'inherit' },
+	)
 	/* eslint-enable sonarjs/no-os-command-from-path */
 
 	return result.status ?? 1

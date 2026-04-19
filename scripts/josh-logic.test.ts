@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { COMMAND_MAP, josh_logic } from './josh-logic'
 
+const ENV_FILE_FLAG = '--env-file=.env'
+
 const EXPECTED_COMMANDS = [
 	'init',
 	'sync',
@@ -49,8 +51,22 @@ describe('josh_logic.format_help', () => {
 	})
 })
 
+describe('COMMAND_MAP env-file commands', () => {
+	it('git-followup includes --env-file=.env tsx argument', () => {
+		expect(COMMAND_MAP['git-followup']?.tsx_arguments).toContain(ENV_FILE_FLAG)
+	})
+
+	it('telegram-test includes --env-file=.env tsx argument', () => {
+		expect(COMMAND_MAP['telegram-test']?.tsx_arguments).toContain(ENV_FILE_FLAG)
+	})
+})
+
 describe('josh_logic.run_command', () => {
 	it('returns -1 for an unknown command', () => {
 		expect(josh_logic.run_command('not-a-real-command', [])).toBe(-1)
+	})
+
+	it('returns -1 for inherited prototype keys like constructor', () => {
+		expect(josh_logic.run_command('constructor', [])).toBe(-1)
 	})
 })

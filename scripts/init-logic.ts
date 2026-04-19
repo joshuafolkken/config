@@ -1,4 +1,5 @@
 import strip_json_comments from 'strip-json-comments'
+import { apply_jf_migrations } from './init-logic-migrate'
 
 const SONAR_PROJECT_KEY_PLACEHOLDER = '{{PROJECT_KEY}}'
 const SONAR_ORGANIZATION_PLACEHOLDER = '{{ORGANIZATION}}'
@@ -331,11 +332,13 @@ function transform_prompt_paths(content: string): string {
 function merge_package_scripts(content: string, scripts: Record<string, string>): string {
 	const parsed = parse_jsonc(content) as WithScripts
 	const existing = parsed.scripts ?? {}
-	const to_add = Object.entries(scripts).filter(([key]) => !(key in existing))
+	const migrated = apply_jf_migrations(existing)
+	const to_add = Object.entries(scripts).filter(([key]) => !(key in migrated))
+	const did_migrate = JSON.stringify(migrated) !== JSON.stringify(existing)
 
-	if (to_add.length === 0) return content
+	if (!did_migrate && to_add.length === 0) return content
 
-	parsed.scripts = { ...existing, ...Object.fromEntries(to_add) }
+	parsed.scripts = { ...migrated, ...Object.fromEntries(to_add) }
 
 	return `${JSON.stringify(parsed, undefined, '\t')}\n`
 }
