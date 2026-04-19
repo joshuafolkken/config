@@ -25,25 +25,25 @@ describe('get_suggested_scripts common scripts', () => {
 })
 
 describe('get_suggested_scripts bin commands', () => {
-	it('uses jf-git bin command for git script', () => {
-		expect(init_logic.get_suggested_scripts('vanilla')).toHaveProperty('git', 'jf-git')
+	it('uses josh subcommand for git script', () => {
+		expect(init_logic.get_suggested_scripts('vanilla')).toHaveProperty('git', 'josh git')
 	})
 
-	it('uses jf-bin commands for git:followup and telegram:test', () => {
+	it('uses josh subcommands for git:followup and telegram:test', () => {
 		const scripts = init_logic.get_suggested_scripts('vanilla')
 
-		expect(scripts).toHaveProperty('git:followup', 'jf-git-followup')
-		expect(scripts).toHaveProperty('telegram:test', 'jf-telegram-test')
+		expect(scripts).toHaveProperty('git:followup', 'josh git-followup')
+		expect(scripts).toHaveProperty('telegram:test', 'josh telegram-test')
 	})
 
-	it('uses jf-bin commands for prevent-main-commit and check-commit-message', () => {
+	it('uses josh subcommands for prevent-main-commit and check-commit-message', () => {
 		expect(init_logic.get_suggested_scripts('vanilla')).toHaveProperty(
 			'prevent-main-commit',
-			'jf-prevent-main-commit',
+			'josh prevent-main-commit',
 		)
 		expect(init_logic.get_suggested_scripts('vanilla')).toHaveProperty(
 			'check-commit-message',
-			'jf-check-commit-message',
+			'josh check-commit-message',
 		)
 	})
 })
