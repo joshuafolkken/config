@@ -153,18 +153,27 @@ function format_help(): string {
 	return [HEADER, '', sections.join('\n\n'), '', USAGE].join('\n')
 }
 
+function spawn_script(tsx_executable: string, script_arguments: Array<string>): number {
+	const result = spawnSync(tsx_executable, script_arguments, { stdio: 'inherit' })
+
+	if (result.error) console.error(`Failed to execute ${tsx_executable}: ${result.error.message}`)
+
+	return result.status ?? 1
+}
+
 function run_command(cmd: string, subcommand_arguments: Array<string>): number {
 	const entry = Object.hasOwn(COMMAND_MAP, cmd) ? COMMAND_MAP[cmd] : undefined
 
 	if (!entry) return -1
 
-	const result = spawnSync(
-		resolve_tsx_executable(),
-		[...(entry.tsx_arguments ?? []), path.join(PACKAGE_DIR, entry.script), ...subcommand_arguments],
-		{ stdio: 'inherit' },
-	)
+	const tsx_executable = resolve_tsx_executable()
+	const script_arguments = [
+		...(entry.tsx_arguments ?? []),
+		path.join(PACKAGE_DIR, entry.script),
+		...subcommand_arguments,
+	]
 
-	return result.status ?? 1
+	return spawn_script(tsx_executable, script_arguments)
 }
 
 const josh_logic = { format_help, run_command }
