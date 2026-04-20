@@ -214,11 +214,12 @@ function append_user_blocks(base: string, user_keys: Array<string>, existing: st
 
 function merge_workspace_yaml(existing: string, template: string): string {
 	if (!existing.trim()) return template
+	const normalized = existing.endsWith('\n') ? existing : `${existing}\n`
 	const template_keys = new Set(extract_yaml_top_level_keys(template))
-	const user_keys = extract_yaml_top_level_keys(existing).filter((k) => !template_keys.has(k))
+	const user_keys = extract_yaml_top_level_keys(normalized).filter((k) => !template_keys.has(k))
 	if (user_keys.length === 0) return template
 
-	return append_user_blocks(template, user_keys, existing)
+	return append_user_blocks(template, user_keys, normalized)
 }
 
 function get_tsconfig_extends_entry(type: ProjectType): string {

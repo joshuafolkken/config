@@ -118,8 +118,9 @@ const WORKSPACE_TEMPLATE =
 	'onlyBuiltDependencies:\n  - esbuild\n\nminimumReleaseAgeExclude:\n  - vite\n'
 const PACKAGES_KEY = 'packages:'
 const ONLY_BUILT_KEY = 'onlyBuiltDependencies:'
+const KIT_LIST_ENTRY = '  - "@joshuafolkken/kit"'
 
-describe('merge_workspace_yaml', () => {
+describe('merge_workspace_yaml - empty and kit-only cases', () => {
 	it('returns template when existing is empty string', () => {
 		expect(init_logic.merge_workspace_yaml('', WORKSPACE_TEMPLATE)).toBe(WORKSPACE_TEMPLATE)
 	})
@@ -130,15 +131,6 @@ describe('merge_workspace_yaml', () => {
 		expect(init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)).toBe(WORKSPACE_TEMPLATE)
 	})
 
-	it('preserves user-defined keys appended after template content', () => {
-		const existing = 'packages:\n  - "@joshuafolkken/kit"\nonlyBuiltDependencies:\n  - esbuild\n'
-		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
-
-		expect(result).toContain(PACKAGES_KEY)
-		expect(result).toContain('  - "@joshuafolkken/kit"')
-		expect(result).toContain(ONLY_BUILT_KEY)
-	})
-
 	it('uses template values for kit-managed keys ignoring existing values', () => {
 		const existing = 'onlyBuiltDependencies:\n  - old-value\n'
 		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
@@ -146,8 +138,19 @@ describe('merge_workspace_yaml', () => {
 		expect(result).toContain('  - esbuild')
 		expect(result).not.toContain('old-value')
 	})
+})
 
-	it('includes kit-managed keys from template and preserves user keys', () => {
+describe('merge_workspace_yaml - user key preservation', () => {
+	it('preserves user-defined keys appended after template content', () => {
+		const existing = 'packages:\n  - "@joshuafolkken/kit"\nonlyBuiltDependencies:\n  - esbuild\n'
+		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
+
+		expect(result).toContain(PACKAGES_KEY)
+		expect(result).toContain(KIT_LIST_ENTRY)
+		expect(result).toContain(ONLY_BUILT_KEY)
+	})
+
+	it('includes kit-managed keys from template and preserves multiple user keys', () => {
 		const existing =
 			'packages:\n  - "@joshuafolkken/kit"\ncatalogs:\n  default:\n    react: ^19.0.0\n'
 		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
@@ -156,5 +159,14 @@ describe('merge_workspace_yaml', () => {
 		expect(result).toContain('minimumReleaseAgeExclude:')
 		expect(result).toContain(PACKAGES_KEY)
 		expect(result).toContain('catalogs:')
+	})
+
+	it('preserves last user block value when existing lacks trailing newline', () => {
+		const result = init_logic.merge_workspace_yaml(
+			`${PACKAGES_KEY}\n${KIT_LIST_ENTRY}`,
+			WORKSPACE_TEMPLATE,
+		)
+
+		expect(result).toContain(KIT_LIST_ENTRY)
 	})
 })
