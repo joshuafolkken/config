@@ -12,11 +12,12 @@ describe('completion gate steps', () => {
 		expect(COMPLETION_GATE_STEPS).toContain(GATE_CHECK_CI)
 	})
 
-	it('uses check:svelte:ci (svelte-check), not the incremental fast variant', () => {
+	it('uses pnpm josh check:svelte:ci, not pnpm run or the fast incremental variant', () => {
 		const check_step = COMPLETION_GATE_STEPS.find((step) => step.includes('check:svelte:ci'))
 
 		expect(check_step).toBe(GATE_CHECK_CI)
-		expect(COMPLETION_GATE_STEPS).not.toContain('pnpm run check:svelte')
+		expect(GATE_CHECK_CI).toContain('pnpm josh')
+		expect(COMPLETION_GATE_STEPS).not.toContain('pnpm josh check:svelte')
 	})
 
 	it('runs lint before the type-check', () => {

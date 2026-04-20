@@ -50,14 +50,19 @@ These files have no merge strategy. If they already exist, `josh init` prints th
 
 ## Package scripts
 
-`josh init` reads your `package.json` and adds any missing scripts from the recommended set. Existing scripts are never overwritten.
+`josh init` adds only two scripts to your `package.json`:
 
-Scripts added for all project types:
+| Script        | Command            |
+| ------------- | ------------------ |
+| `postinstall` | `lefthook install` |
+| `josh`        | `josh`             |
 
-| Script               | Command                                           |
+All other toolchain tasks are available as `pnpm josh <command>` subcommands — they are **not** added as separate package scripts. Existing scripts are never overwritten.
+
+### Available `pnpm josh` subcommands (all project types)
+
+| Command              | Runs                                              |
 | -------------------- | ------------------------------------------------- |
-| `postinstall`        | `lefthook install`                                |
-| `josh`               | `josh`                                            |
 | `lint`               | `pnpm lint:prettier && pnpm lint:eslint`          |
 | `lint:prettier`      | `prettier --check .`                              |
 | `lint:eslint`        | `eslint . --cache --cache-strategy content`       |
@@ -75,9 +80,11 @@ Scripts added for all project types:
 | `main:merge`         | `git pull origin main`                            |
 | `check`              | `pnpm exec tsc --noEmit`                          |
 
-Additional scripts added for SvelteKit projects:
+### Additional subcommands for SvelteKit projects
 
-| Script            | Command                                                      |
+These require `svelte-check` and `svelte-fast-check` to be installed in the project.
+
+| Command           | Runs                                                         |
 | ----------------- | ------------------------------------------------------------ |
 | `check:svelte`    | `svelte-kit sync && svelte-fast-check --incremental`         |
 | `check:svelte:ci` | `svelte-kit sync && svelte-check --tsconfig ./tsconfig.json` |
