@@ -192,6 +192,7 @@ export default defineConfig({
 \tplugins: [sveltekit()]
 })
 `
+const VISUALIZER_CALL = "visualizer({ open: true, filename: 'stats.html' })"
 
 describe('merge_vite_config', () => {
 	it('adds visualizer import', () => {
@@ -203,7 +204,7 @@ describe('merge_vite_config', () => {
 	it('adds visualizer plugin call to plugins array', () => {
 		const result = init_logic.merge_vite_config(STANDARD_VITE_CONFIG)
 
-		expect(result).toContain("visualizer({ open: true, filename: 'stats.html' })")
+		expect(result).toContain(VISUALIZER_CALL)
 	})
 
 	it('is idempotent when visualizer already present', () => {
@@ -223,6 +224,21 @@ describe('merge_vite_config', () => {
 		const result = init_logic.merge_vite_config(content)
 
 		expect(result).toContain("plugins: [visualizer({ open: true, filename: 'stats.html' })]")
+	})
+
+	it('handles plugins array with nested brackets', () => {
+		const content = `import { sveltekit } from '@sveltejs/kit/vite'\nimport { defineConfig } from 'vite'\nexport default defineConfig({ plugins: [sveltekit(), tailwindcss({ content: ['./src/**/*'] })] })\n`
+		const result = init_logic.merge_vite_config(content)
+
+		expect(result).toContain(VISUALIZER_CALL)
+		expect(result).toContain("tailwindcss({ content: ['./src/**/*'] })")
+	})
+
+	it('does not inject import when no plugins array found', () => {
+		const content = `import { defineConfig } from 'vite'\nexport default defineConfig({})\n`
+		const result = init_logic.merge_vite_config(content)
+
+		expect(result).toBe(content)
 	})
 })
 /* eslint-enable dot-notation */
