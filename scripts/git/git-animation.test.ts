@@ -12,13 +12,16 @@ describe('git_animation constants', () => {
 })
 
 describe('git_animation.create_animation — non-TTY', () => {
+	let is_original_tty = process.stdout.isTTY
+
 	beforeEach(() => {
+		is_original_tty = process.stdout.isTTY
 		Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 	})
 
 	afterEach(() => {
 		vi.restoreAllMocks()
-		Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true })
+		Object.defineProperty(process.stdout, 'isTTY', { value: is_original_tty, writable: true })
 	})
 
 	it('returns controller with no-op stop', () => {

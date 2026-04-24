@@ -20,14 +20,17 @@ describe('git_countdown.wait_for_seconds — no countdown message', () => {
 })
 
 describe('git_countdown.wait_for_seconds — non-TTY with message', () => {
+	let is_original_tty = process.stdout.isTTY
+
 	beforeEach(() => {
 		vi.useFakeTimers()
+		is_original_tty = process.stdout.isTTY
 		Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true })
 	})
 
 	afterEach(() => {
 		vi.useRealTimers()
-		Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true })
+		Object.defineProperty(process.stdout, 'isTTY', { value: is_original_tty, writable: true })
 	})
 
 	it('resolves without writing to stdout when not TTY', async () => {
