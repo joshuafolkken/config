@@ -6,6 +6,7 @@
  */
 import { execSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { overrides_check, type OverridesDiff } from '../scripts/overrides/overrides-logic'
 
 const PACKAGE_JSON_PATH = 'package.json'
@@ -117,7 +118,7 @@ function main(): void {
 	verify_overrides(snapshot)
 }
 
-main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()
 
 const prep = { report_diff }
 

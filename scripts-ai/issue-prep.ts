@@ -5,6 +5,7 @@
  * Usage: tsx scripts-ai/issue-prep.ts <issue-number>
  */
 import { execSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { issue_logic } from '../scripts/issue/issue-logic'
 
 const ARGV_INDEX = 2
@@ -67,7 +68,7 @@ function main(): void {
 	display_issue_info(issue_number, issue_number_string, title)
 }
 
-main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()
 
 const issue_prep = { display_language_status }
 
