@@ -1,6 +1,69 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZodError } from 'zod'
 import { package_version_schema } from './schemas'
+
+vi.mock('node:fs', () => ({
+	readFileSync: vi.fn(),
+	writeFileSync: vi.fn(),
+}))
+
+const MOCK_PKG = JSON.stringify({ name: 'kit', version: '1.2.3' })
+const ORIGINAL_ARGV = process.argv[2] ?? ''
+
+afterEach(() => {
+	process.argv[2] = ORIGINAL_ARGV
+})
+
+describe('bump-version.ts — version increment', () => {
+	beforeEach(() => {
+		vi.resetModules()
+	})
+
+	it('increments patch version', async () => {
+		process.argv[2] = 'patch'
+
+		const { readFileSync: read_file_sync, writeFileSync: write_file_sync } = await import('node:fs')
+
+		vi.mocked(read_file_sync).mockReturnValue(MOCK_PKG)
+
+		await import('./bump-version')
+
+		expect(vi.mocked(write_file_sync)).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.stringContaining('"version": "1.2.4"'),
+		)
+	})
+
+	it('increments minor version and resets patch', async () => {
+		process.argv[2] = 'minor'
+
+		const { readFileSync: read_file_sync, writeFileSync: write_file_sync } = await import('node:fs')
+
+		vi.mocked(read_file_sync).mockReturnValue(MOCK_PKG)
+
+		await import('./bump-version')
+
+		expect(vi.mocked(write_file_sync)).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.stringContaining('"version": "1.3.0"'),
+		)
+	})
+
+	it('increments major version and resets minor and patch', async () => {
+		process.argv[2] = 'major'
+
+		const { readFileSync: read_file_sync, writeFileSync: write_file_sync } = await import('node:fs')
+
+		vi.mocked(read_file_sync).mockReturnValue(MOCK_PKG)
+
+		await import('./bump-version')
+
+		expect(vi.mocked(write_file_sync)).toHaveBeenCalledWith(
+			expect.any(String),
+			expect.stringContaining('"version": "2.0.0"'),
+		)
+	})
+})
 
 describe('package_version_schema — valid input', () => {
 	it('parses a semver version string', () => {
