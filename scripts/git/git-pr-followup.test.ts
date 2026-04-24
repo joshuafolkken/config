@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { is_blank_issue_body, post_notify_issue } from './git-pr-followup'
+import {
+	build_telegram_input,
+	is_blank_issue_body,
+	parse_repo_name,
+	post_notify_issue,
+	type TelegramContext,
+} from './git-pr-followup'
 
 vi.mock('./git-gh-command', () => ({
 	git_gh_command: {
@@ -80,5 +86,43 @@ describe('post_notify_issue — blank body uses edit, non-blank uses comment', (
 		await expect(post_notify_issue({ issue_number: undefined, body: NOTIFY_BODY })).rejects.toThrow(
 			'Issue number is required for issue notification.',
 		)
+	})
+})
+
+describe('parse_repo_name', () => {
+	it('returns the repo name from owner/repo format', () => {
+		expect(parse_repo_name('joshuafolkken/tasks')).toBe('tasks')
+	})
+
+	it('returns undefined when input is undefined', () => {
+		const input: string | undefined = undefined
+
+		expect(parse_repo_name(input)).toBeUndefined()
+	})
+})
+
+describe('build_telegram_input', () => {
+	const CONTEXT: TelegramContext = {
+		repo_name: 'joshuafolkken-com',
+		issue_title: 'Fix bug',
+		issue_url: 'https://github.com/owner/repo/issues/1',
+		pr_url: 'https://github.com/owner/repo/pull/2',
+	}
+
+	it('forwards context fields and task_type onto the send input', () => {
+		const result = build_telegram_input({
+			task_type: 'completion',
+			context: CONTEXT,
+			body: undefined,
+		})
+
+		expect(result).toStrictEqual({
+			task_type: 'completion',
+			repo_name: CONTEXT.repo_name,
+			issue_title: CONTEXT.issue_title,
+			body: undefined,
+			issue_url: CONTEXT.issue_url,
+			pr_url: CONTEXT.pr_url,
+		})
 	})
 })
