@@ -21,16 +21,19 @@ vi.mock('./git-command', () => ({
 
 const { git_push } = await import('./git-push')
 const { git_command } = await import('./git-command')
+const { animation_helpers } = await import('./animation-helpers')
 const mocked_push = vi.mocked(git_command.push)
+const mocked_execute = vi.mocked(animation_helpers.execute_with_animation)
 
 beforeEach(() => {
 	vi.clearAllMocks()
 })
 
 describe('git_push.push', () => {
-	it('calls git_command.push', async () => {
+	it('calls git_command.push via animation wrapper', async () => {
 		await git_push.push()
 
+		expect(mocked_execute).toHaveBeenCalledOnce()
 		expect(mocked_push).toHaveBeenCalledOnce()
 	})
 

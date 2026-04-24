@@ -13,7 +13,7 @@ vi.mock('./git-prompt', () => ({
 }))
 
 beforeEach(() => {
-	vi.spyOn(console, 'info')
+	vi.spyOn(console, 'info').mockImplementation(vi.fn())
 })
 
 afterEach(() => {

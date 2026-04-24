@@ -78,5 +78,7 @@ describe('animation_helpers.execute_with_animation — error', () => {
 				{ error_message: CUSTOM_ERROR_MESSAGE },
 			),
 		).rejects.toThrow(CUSTOM_ERROR_MESSAGE)
+
+		expect(stop_spy).toHaveBeenCalledOnce()
 	})
 })
