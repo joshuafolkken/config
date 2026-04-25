@@ -41,8 +41,10 @@ function install_josh_bin_section(): void {
 
 	try {
 		install_josh_bin()
-	} catch {
-		console.warn('  ⚠ josh bin install failed — run manually: josh install')
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error)
+
+		console.warn(`  ⚠ josh bin install failed — run manually: josh install (${message})`)
 	}
 }
 
