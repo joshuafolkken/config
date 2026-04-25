@@ -18,6 +18,7 @@ const TSX_BIN = 'tsx'
 const SVELTE_KIT_DEP = '@sveltejs/kit'
 const NODE_MODULES = 'node_modules'
 const PACKAGE_JSON = 'package.json'
+const SPAWN_ERROR_EXIT_CODE = 2
 
 function resolve_tsx_executable(): string {
 	const candidates = [
@@ -99,7 +100,11 @@ function format_help(): string {
 function spawn_script(tsx_executable: string, script_arguments: Array<string>): number {
 	const result = spawnSync(tsx_executable, script_arguments, { stdio: 'inherit' })
 
-	if (result.error) console.error(`Failed to execute ${tsx_executable}: ${result.error.message}`)
+	if (result.error) {
+		console.error(`Failed to execute ${tsx_executable}: ${result.error.message}`)
+
+		return SPAWN_ERROR_EXIT_CODE
+	}
 
 	return result.status ?? 1
 }
@@ -108,7 +113,11 @@ function run_shell_command(shell: ReadonlyArray<string>, extra: Array<string>): 
 	const [executable = '', ...rest_arguments] = shell
 	const result = spawnSync(executable, [...rest_arguments, ...extra], { stdio: 'inherit' })
 
-	if (result.error) console.error(`Failed to execute ${executable}: ${result.error.message}`)
+	if (result.error) {
+		console.error(`Failed to execute ${executable}: ${result.error.message}`)
+
+		return SPAWN_ERROR_EXIT_CODE
+	}
 
 	return result.status ?? 1
 }
@@ -146,8 +155,8 @@ function run_command(cmd: string, subcommand_arguments: Array<string>): number {
 	return run_script_entry(entry, subcommand_arguments)
 }
 
-const josh_logic = { format_help, run_command }
+const josh_logic = { format_help, run_command, spawn_script, run_shell_command }
 
 export type { CommandEntry } from './josh-command-map'
 export { ALIASES, COMMAND_MAP } from './josh-command-map'
-export { josh_logic, resolve_alias, resolve_tsx_executable }
+export { josh_logic, resolve_alias, resolve_tsx_executable, SPAWN_ERROR_EXIT_CODE }
