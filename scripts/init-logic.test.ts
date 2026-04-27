@@ -159,6 +159,10 @@ describe('get_ai_copy_files - dotfiles and config', () => {
 		expect(result).toContain('wrangler.jsonc')
 		expect(result).not.toContain('sonar-project.properties')
 	})
+
+	it('includes .claude/settings.json', () => {
+		expect(init_logic.get_ai_copy_files()).toContain('.claude/settings.json')
+	})
 })
 
 describe('get_ai_copy_file_mappings', () => {
