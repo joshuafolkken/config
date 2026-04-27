@@ -40,6 +40,7 @@ const AI_COPY_FILES: ReadonlyArray<string> = [
 	'.github/workflows/sonar-cube.yml',
 	'.github/pull_request_template.md',
 	'.github/release.yml',
+	'.claude/settings.json',
 ]
 
 interface FileCopyMapping {
