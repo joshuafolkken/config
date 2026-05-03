@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import yaml from 'js-yaml'
 import { describe, expect, it } from 'vitest'
 
 interface PackageJson {
@@ -14,10 +15,23 @@ interface PackageJson {
 	scripts?: Record<string, string>
 }
 
+interface WorkspaceYaml {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	onlyBuiltDependencies?: Array<string>
+}
+
 function load_manifest(): PackageJson {
 	const content = readFileSync(path.resolve(process.cwd(), 'package.json'), 'utf8')
 
 	return JSON.parse(content) as PackageJson
+}
+
+const WORKSPACE_CONFIG = 'pnpm-workspace.yaml'
+
+function load_workspace(): WorkspaceYaml {
+	const content = readFileSync(path.resolve(process.cwd(), WORKSPACE_CONFIG), 'utf8')
+
+	return yaml.load(content) as WorkspaceYaml
 }
 
 function extract_top_directory(file_path: string): string {
@@ -70,7 +84,7 @@ const AI_COPY_ROOT_FILES = [
 	'.mcp.json',
 	'.ncurc.json',
 	'.prettierignore',
-	'pnpm-workspace.yaml',
+	WORKSPACE_CONFIG,
 	'tsconfig.sonar.json',
 	'wrangler.jsonc',
 ] as const
@@ -118,12 +132,18 @@ describe('package.json files field', () => {
 	})
 })
 
-describe('package.json pnpm built-dependency lists', () => {
-	const manifest = load_manifest()
-	const only_built = manifest.pnpm?.onlyBuiltDependencies ?? []
+describe('pnpm-workspace.yaml built-dependency lists', () => {
+	const workspace = load_workspace()
+	const only_built = workspace.onlyBuiltDependencies ?? []
 
 	it('keeps native builds required by this project', () => {
 		expect(only_built).toEqual(expect.arrayContaining(['esbuild', 'lefthook', 'unrs-resolver']))
+	})
+
+	it('package.json does not duplicate onlyBuiltDependencies', () => {
+		const manifest = load_manifest()
+
+		expect(manifest.pnpm?.onlyBuiltDependencies).toBeUndefined()
 	})
 })
 

@@ -1,5 +1,5 @@
 {
-	"version": "0.121.0",
+	"version": "0.122.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -11,7 +11,7 @@
 		"josh": "./scripts/josh.ts"
 	},
 	"scripts": {
-		"preinstall": "pnpm dlx @aikidosec/safe-chain setup-ci",
+		"preinstall": "pnpm dlx @aikidosec/safe-chain@1.5.1 setup-ci",
 		"postinstall": "lefthook install && tsx scripts/install-bin.ts",
 		"josh": "tsx scripts/josh.ts"
 	},
@@ -77,13 +77,6 @@
 	},
 	"publishConfig": {
 		"registry": "https://npm.pkg.github.com"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"lefthook",
-			"unrs-resolver"
-		]
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.5",
