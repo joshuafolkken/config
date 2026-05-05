@@ -1,5 +1,5 @@
 {
-	"version": "0.132.0",
+	"version": "0.133.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -61,8 +61,7 @@
 			"default": "./tsconfig/sveltekit.jsonc"
 		},
 		"./cspell": "./cspell/index.yaml",
-		"./cspell/sveltekit": "./cspell/sveltekit.yaml",
-		"./playwright/base": "./templates/playwright/base.ts"
+		"./cspell/sveltekit": "./cspell/sveltekit.yaml"
 	},
 	"peerDependencies": {
 		"@playwright/test": ">=1.0.0",

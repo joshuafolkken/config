@@ -199,18 +199,109 @@ describe('sync_prettier_config', () => {
 })
 
 const PLAYWRIGHT_DEST = path.join(TEST_DIR, 'dest', 'playwright.config.ts')
-const DEFAULT_PLAYWRIGHT_CONTENT = `import { create_playwright_config } from '@joshuafolkken/kit/playwright/base'
+const PLAYWRIGHT_TEMPLATE_HEADER = "import { defineConfig, devices } from '@playwright/test'"
+const DEFAULT_PLAYWRIGHT_CONTENT = `import { defineConfig, devices } from '@playwright/test'
 
-export default create_playwright_config({
-\tdev_port: 5173,
-\tpreview_port: 4173,
+const IS_CI = Boolean(process.env['CI'])
+
+const DEV_PORT = 5173
+const PREVIEW_PORT = 4173
+
+const CI_TIMEOUT = 15_000
+const LOCAL_TIMEOUT = 25_000
+const TEST_TIMEOUT = 10_000
+const EXPECT_TIMEOUT = 5_000
+const ACTION_TIMEOUT = 5_000
+const NAVIGATION_TIMEOUT = 10_000
+const CI_WORKERS = 2
+const CI_RETRIES = 2
+const VIEWPORT_WIDTH = 1_280
+const VIEWPORT_HEIGHT = 720
+
+const web_server_config = IS_CI
+\t? { command: 'pnpm run preview', port: PREVIEW_PORT, timeout: CI_TIMEOUT, reuseExistingServer: false }
+\t: { command: 'pnpm run dev', port: DEV_PORT, timeout: LOCAL_TIMEOUT, reuseExistingServer: true }
+
+export default defineConfig({
+\twebServer: web_server_config,
+\ttestDir: 'e2e',
+\tfullyParallel: true,
+\t...(IS_CI ? { workers: CI_WORKERS } : {}),
+\tretries: IS_CI ? CI_RETRIES : 0,
+\ttimeout: TEST_TIMEOUT,
+\texpect: { timeout: EXPECT_TIMEOUT },
+\tprojects: [
+\t\t{
+\t\t\tname: 'chromium',
+\t\t\tuse: {
+\t\t\t\t...devices['Desktop Chrome'],
+\t\t\t\tviewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+\t\t\t\tlaunchOptions: {
+\t\t\t\t\targs: ['--disable-dev-shm-usage', '--disable-gpu', ...(IS_CI ? ['--no-sandbox'] : [])],
+\t\t\t\t},
+\t\t\t},
+\t\t},
+\t],
+\treporter: IS_CI ? [['html'], ['github']] : [['html'], ['list']],
+\tuse: {
+\t\tactionTimeout: ACTION_TIMEOUT,
+\t\tnavigationTimeout: NAVIGATION_TIMEOUT,
+\t\tscreenshot: IS_CI ? 'only-on-failure' : 'off',
+\t\tvideo: IS_CI ? 'retain-on-failure' : 'off',
+\t\ttrace: IS_CI ? 'retain-on-failure' : 'off',
+\t},
 })
 `
-const CUSTOM_PORT_PLAYWRIGHT_CONTENT = `import { create_playwright_config } from '@joshuafolkken/kit/playwright/base'
+const CUSTOM_PORT_PLAYWRIGHT_CONTENT = `import { defineConfig, devices } from '@playwright/test'
 
-export default create_playwright_config({
-\tdev_port: 3000,
-\tpreview_port: 8080,
+const IS_CI = Boolean(process.env['CI'])
+
+const DEV_PORT = 3000
+const PREVIEW_PORT = 8080
+
+const CI_TIMEOUT = 15_000
+const LOCAL_TIMEOUT = 25_000
+const TEST_TIMEOUT = 10_000
+const EXPECT_TIMEOUT = 5_000
+const ACTION_TIMEOUT = 5_000
+const NAVIGATION_TIMEOUT = 10_000
+const CI_WORKERS = 2
+const CI_RETRIES = 2
+const VIEWPORT_WIDTH = 1_280
+const VIEWPORT_HEIGHT = 720
+
+const web_server_config = IS_CI
+\t? { command: 'pnpm run preview', port: PREVIEW_PORT, timeout: CI_TIMEOUT, reuseExistingServer: false }
+\t: { command: 'pnpm run dev', port: DEV_PORT, timeout: LOCAL_TIMEOUT, reuseExistingServer: true }
+
+export default defineConfig({
+\twebServer: web_server_config,
+\ttestDir: 'e2e',
+\tfullyParallel: true,
+\t...(IS_CI ? { workers: CI_WORKERS } : {}),
+\tretries: IS_CI ? CI_RETRIES : 0,
+\ttimeout: TEST_TIMEOUT,
+\texpect: { timeout: EXPECT_TIMEOUT },
+\tprojects: [
+\t\t{
+\t\t\tname: 'chromium',
+\t\t\tuse: {
+\t\t\t\t...devices['Desktop Chrome'],
+\t\t\t\tviewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+\t\t\t\tlaunchOptions: {
+\t\t\t\t\targs: ['--disable-dev-shm-usage', '--disable-gpu', ...(IS_CI ? ['--no-sandbox'] : [])],
+\t\t\t\t},
+\t\t\t},
+\t\t},
+\t],
+\treporter: IS_CI ? [['html'], ['github']] : [['html'], ['list']],
+\tuse: {
+\t\tactionTimeout: ACTION_TIMEOUT,
+\t\tnavigationTimeout: NAVIGATION_TIMEOUT,
+\t\tscreenshot: IS_CI ? 'only-on-failure' : 'off',
+\t\tvideo: IS_CI ? 'retain-on-failure' : 'off',
+\t\ttrace: IS_CI ? 'retain-on-failure' : 'off',
+\t},
 })
 `
 
@@ -227,7 +318,7 @@ describe('sync_playwright_config', () => {
 		writeFileSync(PLAYWRIGHT_DEST, legacy)
 		sync.sync_playwright_config(PLAYWRIGHT_DEST)
 
-		expect(readFileSync(PLAYWRIGHT_DEST, 'utf8')).toContain('create_playwright_config')
+		expect(readFileSync(PLAYWRIGHT_DEST, 'utf8')).toContain(PLAYWRIGHT_TEMPLATE_HEADER)
 	})
 
 	it('preserves custom ports when syncing', () => {
@@ -236,8 +327,8 @@ describe('sync_playwright_config', () => {
 
 		const result = readFileSync(PLAYWRIGHT_DEST, 'utf8')
 
-		expect(result).toContain('dev_port: 3000')
-		expect(result).toContain('preview_port: 8080')
+		expect(result).toContain('DEV_PORT = 3000')
+		expect(result).toContain('PREVIEW_PORT = 8080')
 	})
 
 	it('logs unchanged when file already matches', () => {

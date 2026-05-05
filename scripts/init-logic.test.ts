@@ -71,17 +71,15 @@ describe('generate_lefthook_config', () => {
 })
 
 describe('generate_playwright_config', () => {
-	it('imports create_playwright_config from the package', () => {
-		expect(init_logic.generate_playwright_config()).toContain(
-			"from '@joshuafolkken/kit/playwright/base'",
-		)
+	it('imports defineConfig and devices from @playwright/test', () => {
+		expect(init_logic.generate_playwright_config()).toContain("from '@playwright/test'")
 	})
 
-	it('includes dev_port and preview_port', () => {
+	it('includes DEV_PORT and PREVIEW_PORT constants', () => {
 		const result = init_logic.generate_playwright_config()
 
-		expect(result).toContain('dev_port')
-		expect(result).toContain('preview_port')
+		expect(result).toContain('DEV_PORT')
+		expect(result).toContain('PREVIEW_PORT')
 	})
 })
 
