@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { overrides_check } from './overrides/overrides-logic'
+import { preinstall_version_update } from './preinstall-version-update'
 
 const PACKAGE_JSON_PATH = 'package.json'
 
@@ -34,6 +35,8 @@ function main(): void {
 	} else {
 		run(update_arguments)
 	}
+
+	preinstall_version_update.sync(PACKAGE_JSON_PATH)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main()
