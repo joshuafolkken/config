@@ -92,18 +92,26 @@ Issue: <issue-url>
    - 箇条書きの間に改行を入れて読みやすくする
    - `kickoff` コマンドの場合はここで **停止** する（実装に進まない）
 
-4. メインブランチへ切り替えて最新を取得する:
+4. ワークフロー開始時点で作業ツリーにステージング済みまたは変更済みのファイルが既にある場合（例: ユーザーが事前に kit/設定ファイルをステージングした場合）、先に変更を退避する:
+   ```bash
+   git stash
+   ```
+5. メインブランチへ切り替えて最新を取得する:
    ```bash
    git switch main && git pull
    ```
-5. 依存関係を最新化し、脆弱性を確認する（`pnpm latest` は内部で `pnpm audit` も実行する）:
+6. 依存関係を最新化し、脆弱性を確認する（**必須—作業ツリーに変更があっても省略してはならない**。`pnpm latest` は内部で `pnpm audit` も実行する）:
    ```bash
    pnpm latest
    # 脆弱性が見つかった場合: package.json の overrides に対象バージョンを追加して pnpm install 後に再確認
    ```
-6. 実装を開始する
-7. 実装完了後、**lint/test より前に** `prompts/refactoring.md` に従ってリファクタリングを適用する（高・中優先度項目が残らなくなるまで収束させる）
-8. 検証ゲート（`AGENTS.md` / `CLAUDE.md` / `GEMINI.md` の Completion gate）を実行する
+   ステップ 4 で stash した場合は、ここで復元する:
+   ```bash
+   git stash pop
+   ```
+7. 実装を開始する
+8. 実装完了後、**lint/test より前に** `prompts/refactoring.md` に従ってリファクタリングを適用する（高・中優先度項目が残らなくなるまで収束させる）
+9. 検証ゲート（`AGENTS.md` / `CLAUDE.md` / `GEMINI.md` の Completion gate）を実行する
 
 `pnpm josh git` の基本実行（`-y` で確認プロンプトをスキップ）。**初回コミット前に必ず `pnpm josh bump minor` を実行する。** ただし、同一 PR 内の追加修正コミット（CodeRabbit 指摘対応など）では実行しない。
 
