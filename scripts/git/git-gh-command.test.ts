@@ -33,6 +33,7 @@ const mocked_get_default_branch = vi.mocked(git_command.get_default_branch)
 const DEFAULT_BRANCH = 'main'
 const FEATURE_BRANCH = 'feature-branch'
 const NETWORK_ERROR = 'network error'
+const NO_PR_ERROR = 'no PR'
 const PR_TITLE = 'title'
 const PR_BODY = 'body'
 const GITHUB_PR_URL = 'https://github.com/owner/repo/pull/1'
@@ -157,10 +158,35 @@ describe('git_gh_command.pr_get_url', () => {
 		expect(url).toBe(GITHUB_PR_URL)
 	})
 
-	it('returns undefined when exec throws', async () => {
-		mocked_exec.mockRejectedValue(new Error('no PR'))
+	it('returns undefined when pr_get_url exec throws', async () => {
+		mocked_exec.mockRejectedValue(new Error(NO_PR_ERROR))
 		const url = await git_gh_command.pr_get_url(FEATURE_BRANCH)
 
 		expect(url).toBeUndefined()
+	})
+})
+
+describe('git_gh_command.pr_get_body', () => {
+	const PR_BODY_TEXT = 'closes #42\n\n## Summary\nSome details'
+
+	it('returns body string when exec succeeds', async () => {
+		mocked_exec.mockResolvedValue(PR_BODY_TEXT)
+		const body = await git_gh_command.pr_get_body(FEATURE_BRANCH)
+
+		expect(body).toBe(PR_BODY_TEXT)
+	})
+
+	it('returns undefined when exec throws', async () => {
+		mocked_exec.mockRejectedValue(new Error(NO_PR_ERROR))
+		const body = await git_gh_command.pr_get_body(FEATURE_BRANCH)
+
+		expect(body).toBeUndefined()
+	})
+
+	it('returns undefined when exec returns empty string', async () => {
+		mocked_exec.mockResolvedValue('')
+		const body = await git_gh_command.pr_get_body(FEATURE_BRANCH)
+
+		expect(body).toBeUndefined()
 	})
 })

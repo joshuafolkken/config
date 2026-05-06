@@ -143,6 +143,7 @@ function run_script_entry(entry: CommandEntry, subcommand_arguments: Array<strin
 	const script_arguments = [
 		...(entry.tsx_arguments ?? []),
 		path.join(PACKAGE_DIR, entry.script ?? ''),
+		...(entry.default_script_arguments ?? []),
 		...subcommand_arguments,
 	]
 

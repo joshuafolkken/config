@@ -46,6 +46,7 @@ const ALIASES: Record<string, string> = {
 	sy: 'sync',
 	il: 'install',
 	g: 'git',
+	gp: 'pr',
 	fu: 'followup',
 	nf: 'notify',
 	ms: 'main:sync',

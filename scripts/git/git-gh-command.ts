@@ -111,6 +111,24 @@ async function pr_get_url(branch_name: string): Promise<string | undefined> {
 	}
 }
 
+async function pr_get_body(branch_name: string): Promise<string | undefined> {
+	try {
+		const result: string = await git_gh_exec.exec_gh_command([
+			'pr',
+			'view',
+			branch_name,
+			'--json',
+			'body',
+			'--jq',
+			'.body',
+		])
+
+		return result.length > 0 ? result : undefined
+	} catch {
+		return undefined
+	}
+}
+
 function parse_number_output(result: string): number | undefined {
 	const parsed = Number(result.trim())
 	if (!Number.isFinite(parsed)) return undefined
@@ -262,6 +280,7 @@ const git_gh_command = {
 	pr_exists,
 	pr_view,
 	pr_get_url,
+	pr_get_body,
 	pr_get_number,
 	pr_get_state_snapshot,
 	issue_get_title,

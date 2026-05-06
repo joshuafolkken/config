@@ -1,11 +1,19 @@
 import { ENV_FILE_FLAGS, type CommandEntry } from './josh-command-types'
 
+const GIT_WORKFLOW_SCRIPT = 'scripts-ai/git-workflow.ts'
+
 /* eslint-disable @typescript-eslint/naming-convention */
 const WORKFLOW_COMMANDS: Record<string, CommandEntry> = {
 	git: {
-		script: 'scripts-ai/git-workflow.ts',
+		script: GIT_WORKFLOW_SCRIPT,
 		description: 'Git workflow helper',
 		category: 'Workflow',
+	},
+	pr: {
+		script: GIT_WORKFLOW_SCRIPT,
+		description: 'Create PR only (skip commit and push)',
+		category: 'Workflow',
+		default_script_arguments: ['-y', '--skip-commit', '--skip-push'],
 	},
 	followup: {
 		script: 'scripts-ai/git-followup-workflow.ts',
