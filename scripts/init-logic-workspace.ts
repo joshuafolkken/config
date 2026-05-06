@@ -22,11 +22,14 @@ function append_user_blocks(base: string, user_keys: Array<string>, existing: st
 	return `${normalized}\n${user_blocks}\n`
 }
 
+const DEPRECATED_KEYS = new Set(['onlyBuiltDependencies'])
+
 function merge_workspace_yaml(existing: string, template: string): string {
 	if (!existing.trim()) return template
 	const normalized = existing.endsWith('\n') ? existing : `${existing}\n`
 	const template_keys = new Set(extract_yaml_top_level_keys(template))
-	const user_keys = extract_yaml_top_level_keys(normalized).filter((k) => !template_keys.has(k))
+	const managed_keys = new Set([...template_keys, ...DEPRECATED_KEYS])
+	const user_keys = extract_yaml_top_level_keys(normalized).filter((k) => !managed_keys.has(k))
 	if (user_keys.length === 0) return template
 
 	return append_user_blocks(template, user_keys, normalized)
