@@ -8,6 +8,7 @@ import { telegram_notify, type TelegramSendInput, type TelegramTaskType } from '
 // cspell:words coderabbit coderabbitai
 
 const CODERABBIT_AUTHOR = 'coderabbitai[bot]'
+const CLOSES_PATTERN = /closes\s+#\d+/iu
 const CODERABBIT_FLAG = '_⚠️ Potential issue_'
 const CODERABBIT_RESOLVED = '✅ Addressed in commit'
 const GITHUB_PULL_URL_PATTERN = /^(https:\/\/github\.com\/[^/]+\/[^/]+)\/pull\/\d+$/u
@@ -100,6 +101,25 @@ function validate_ignore_reason(reason: string | undefined): string {
 	}
 
 	return reason
+}
+
+function has_closes_keyword(body: string | undefined): boolean {
+	if (body === undefined) return false
+
+	return CLOSES_PATTERN.test(body)
+}
+
+async function warn_if_missing_closes(branch_name: string): Promise<void> {
+	const body = await git_gh_command.pr_get_body(branch_name)
+
+	if (has_closes_keyword(body)) return
+
+	console.warn('')
+	console.warn(
+		'⚠️  PR body is missing a "closes #N" keyword — the linked Issue will not auto-close on merge.',
+	)
+	console.warn('   Recovery: pnpm josh pr  (or: pnpm josh git -y --skip-commit --skip-push)')
+	console.warn('')
 }
 
 async function handle_coderabbit_findings(input: {
@@ -228,6 +248,8 @@ async function run_review_checks(input: FollowupInput, context: TelegramContext)
 }
 
 async function run(input: FollowupInput): Promise<void> {
+	await warn_if_missing_closes(input.branch_name)
+
 	const context = await fetch_telegram_context({
 		branch_name: input.branch_name,
 		issue_number: input.issue_number,
@@ -258,6 +280,8 @@ export {
 	is_blank_issue_body,
 	post_notify_issue,
 	build_telegram_input,
+	has_closes_keyword,
+	warn_if_missing_closes,
 }
 export type { FollowupInput }
 export type { TelegramContext } from './git-pr-ai-review'

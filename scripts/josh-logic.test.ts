@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
 	ALIASES,
 	COMMAND_MAP,
@@ -43,7 +43,7 @@ const EXPECTED_COMMANDS_BY_CATEGORY = new Map<string, ReadonlyArray<string>>([
 		],
 	],
 	['Project', ['init', 'sync', 'install']],
-	['Workflow', ['git', 'followup', 'notify', 'main:sync', 'main:merge']],
+	['Workflow', ['git', 'pr', 'followup', 'notify', 'main:sync', 'main:merge']],
 	['Versioning', ['bump', 'version']],
 	['Maintenance', ['overrides', 'audit', 'latest', 'latest:corepack', 'latest:update']],
 	[
@@ -211,6 +211,50 @@ describe('COMMAND_MAP env-file commands', () => {
 		expect(COMMAND_MAP['notify']?.tsx_arguments).toContain(ENV_FILE_FLAG)
 	})
 	/* eslint-enable dot-notation */
+})
+
+const SKIP_COMMIT_FLAG = '--skip-commit'
+const SKIP_PUSH_FLAG = '--skip-push'
+const YES_FLAG = '-y'
+
+describe('COMMAND_MAP pr command', () => {
+	/* eslint-disable dot-notation */
+	it('pr command has default_script_arguments with -y --skip-commit --skip-push', () => {
+		const default_arguments = COMMAND_MAP['pr']?.default_script_arguments ?? []
+
+		expect(default_arguments).toContain(YES_FLAG)
+		expect(default_arguments).toContain(SKIP_COMMIT_FLAG)
+		expect(default_arguments).toContain(SKIP_PUSH_FLAG)
+	})
+
+	it('pr command shares the git workflow script', () => {
+		expect(COMMAND_MAP['pr']?.script).toBe(COMMAND_MAP['git']?.script)
+	})
+	/* eslint-enable dot-notation */
+})
+
+describe('josh_logic.spawn_script — default_script_arguments injection', () => {
+	it('injects default_script_arguments between script path and user args', () => {
+		const spy = vi.spyOn(josh_logic, 'spawn_script').mockReturnValue(0)
+		const tsx_executable = 'tsx'
+		const script_path = path.join(PACKAGE_DIR, 'scripts-ai/git-workflow.ts')
+		const user_arguments = ['feat: my feature #42']
+		const expected_arguments = [
+			script_path,
+			YES_FLAG,
+			SKIP_COMMIT_FLAG,
+			SKIP_PUSH_FLAG,
+			...user_arguments,
+		]
+
+		josh_logic.spawn_script(tsx_executable, expected_arguments)
+
+		expect(spy).toHaveBeenCalledWith(
+			tsx_executable,
+			expect.arrayContaining([YES_FLAG, SKIP_COMMIT_FLAG, SKIP_PUSH_FLAG]),
+		)
+		spy.mockRestore()
+	})
 })
 
 describe('josh_logic.run_command', () => {
