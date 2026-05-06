@@ -6,11 +6,16 @@ import { init_logic_workspace } from './init-logic-workspace'
 
 type ProjectType = 'sveltekit' | 'vanilla'
 
+const DEV_ENGINES_VALUE = {
+	packageManager: { name: 'pnpm', version: '>=11.0.6', onFail: 'error' },
+}
+
 const NPMRC_LINES: ReadonlyArray<string> = [
 	'@joshuafolkken:registry=https://npm.pkg.github.com',
 	'//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}',
 	'engine-strict=true',
 	'minimum-release-age=1440',
+	'confirmModulesPurge=false',
 ]
 
 const CSPELL_IMPORT: Record<ProjectType, string> = {
@@ -133,6 +138,10 @@ function get_npmrc_lines(): ReadonlyArray<string> {
 	return NPMRC_LINES
 }
 
+function get_development_engines_value(): typeof DEV_ENGINES_VALUE {
+	return DEV_ENGINES_VALUE
+}
+
 function get_ai_copy_files(): ReadonlyArray<string> {
 	return AI_COPY_FILES
 }
@@ -188,6 +197,7 @@ const init_logic = {
 	get_lefthook_extends_value,
 	get_cspell_import_value,
 	get_npmrc_lines,
+	get_development_engines_value,
 	get_ai_copy_files,
 	get_ai_copy_file_mappings,
 	get_ai_copy_directories,

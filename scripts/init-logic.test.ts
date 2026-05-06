@@ -282,6 +282,10 @@ describe('get_npmrc_lines', () => {
 			'//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}',
 		)
 	})
+
+	it('includes confirmModulesPurge=false', () => {
+		expect(init_logic.get_npmrc_lines()).toContain('confirmModulesPurge=false')
+	})
 })
 
 describe('cspell sveltekit.yaml content', () => {
