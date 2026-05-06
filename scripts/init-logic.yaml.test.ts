@@ -7,10 +7,10 @@ const KIT_ESLINT_SVELTEKIT = '@joshuafolkken/kit/eslint/sveltekit'
 const KIT_ESLINT = '@joshuafolkken/kit/eslint'
 const CSPELL_VALUE = '@joshuafolkken/kit/cspell'
 const CSPELL_SVK_VALUE = '@joshuafolkken/kit/cspell/sveltekit'
-const WORKSPACE_TEMPLATE =
-	'onlyBuiltDependencies:\n  - esbuild\n\nminimumReleaseAgeExclude:\n  - vite\n'
+const WORKSPACE_TEMPLATE = 'allowBuilds:\n  esbuild: true\n\nminimumReleaseAgeExclude:\n  - vite\n'
 const PACKAGES_KEY = 'packages:'
-const ONLY_BUILT_KEY = 'onlyBuiltDependencies:'
+const ALLOW_BUILDS_KEY = 'allowBuilds:'
+const DEPRECATED_ONLY_BUILT_KEY = 'onlyBuiltDependencies:'
 const KIT_LIST_ENTRY = '  - "@joshuafolkken/kit"'
 
 describe('merge_yaml_list_entry — unchanged when present', () => {
@@ -94,28 +94,29 @@ describe('merge_workspace_yaml - empty and kit-only cases', () => {
 	})
 
 	it('returns template when existing has only kit-managed keys', () => {
-		const existing = 'onlyBuiltDependencies:\n  - esbuild\nminimumReleaseAgeExclude:\n  - vite\n'
+		const existing = `${ALLOW_BUILDS_KEY}\n  esbuild: true\nminimumReleaseAgeExclude:\n  - vite\n`
 
 		expect(init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)).toBe(WORKSPACE_TEMPLATE)
 	})
 
-	it('uses template values for kit-managed keys ignoring existing values', () => {
-		const existing = 'onlyBuiltDependencies:\n  - old-value\n'
+	it('drops deprecated onlyBuiltDependencies and outputs allowBuilds from template', () => {
+		const existing = `${DEPRECATED_ONLY_BUILT_KEY}\n  - old-value\n`
 		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
 
-		expect(result).toContain('  - esbuild')
+		expect(result).toContain(ALLOW_BUILDS_KEY)
+		expect(result).not.toContain(DEPRECATED_ONLY_BUILT_KEY)
 		expect(result).not.toContain('old-value')
 	})
 })
 
 describe('merge_workspace_yaml - user key preservation', () => {
-	it('preserves user-defined keys appended after template content', () => {
-		const existing = 'packages:\n  - "@joshuafolkken/kit"\nonlyBuiltDependencies:\n  - esbuild\n'
+	it('preserves user-defined keys and drops deprecated onlyBuiltDependencies', () => {
+		const existing = `${PACKAGES_KEY}\n  - "@joshuafolkken/kit"\n${DEPRECATED_ONLY_BUILT_KEY}\n  - esbuild\n`
 		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
 
 		expect(result).toContain(PACKAGES_KEY)
 		expect(result).toContain(KIT_LIST_ENTRY)
-		expect(result).toContain(ONLY_BUILT_KEY)
+		expect(result).not.toContain(DEPRECATED_ONLY_BUILT_KEY)
 	})
 
 	it('includes kit-managed keys from template and preserves multiple user keys', () => {
@@ -123,7 +124,7 @@ describe('merge_workspace_yaml - user key preservation', () => {
 			'packages:\n  - "@joshuafolkken/kit"\ncatalogs:\n  default:\n    react: ^19.0.0\n'
 		const result = init_logic.merge_workspace_yaml(existing, WORKSPACE_TEMPLATE)
 
-		expect(result).toContain(ONLY_BUILT_KEY)
+		expect(result).toContain(ALLOW_BUILDS_KEY)
 		expect(result).toContain('minimumReleaseAgeExclude:')
 		expect(result).toContain(PACKAGES_KEY)
 		expect(result).toContain('catalogs:')
