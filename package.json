@@ -1,5 +1,5 @@
 {
-	"version": "0.135.0",
+	"version": "0.136.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -100,7 +100,7 @@
 		"prettier-plugin-svelte": "^3.5.1",
 		"prettier-plugin-tailwindcss": "^0.8.0",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.59.1",
+		"typescript-eslint": "^8.59.2",
 		"vitest": "^4.1.5"
 	},
 	"dependencies": {
