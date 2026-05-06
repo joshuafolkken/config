@@ -2,9 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	build_telegram_input,
 	git_pr_followup,
+	has_closes_keyword,
 	is_blank_issue_body,
 	parse_repo_name,
 	post_notify_issue,
+	warn_if_missing_closes,
 	type FollowupInput,
 	type TelegramContext,
 } from './git-pr-followup'
@@ -17,6 +19,7 @@ vi.mock('./git-gh-command', () => ({
 		repo_get_name_with_owner: vi.fn(),
 		issue_get_title: vi.fn(),
 		pr_get_url: vi.fn(),
+		pr_get_body: vi.fn(),
 		pr_get_review_comments: vi.fn(),
 		pr_get_comments: vi.fn(),
 		pr_merge: vi.fn(),
@@ -50,6 +53,7 @@ const { telegram_notify } = await import('./telegram-notify')
 const mocked_get_body = vi.mocked(git_gh_command.issue_get_body)
 const mocked_edit_body = vi.mocked(git_gh_command.issue_edit_body)
 const mocked_comment = vi.mocked(git_gh_command.issue_comment)
+const mocked_pr_get_body = vi.mocked(git_gh_command.pr_get_body)
 
 describe('is_blank_issue_body', () => {
 	it('returns true for undefined', () => {
@@ -170,12 +174,72 @@ const BASE_INPUT: FollowupInput = {
 	should_merge: false,
 }
 
+describe('has_closes_keyword', () => {
+	it('returns false for undefined', () => {
+		// eslint-disable-next-line unicorn/no-useless-undefined -- explicitly testing undefined input
+		expect(has_closes_keyword(undefined)).toBe(false)
+	})
+
+	it('returns true for "closes #123"', () => {
+		expect(has_closes_keyword('closes #123')).toBe(true)
+	})
+
+	it('returns true case-insensitively for "Closes #42"', () => {
+		expect(has_closes_keyword('Closes #42')).toBe(true)
+	})
+
+	it('returns true when closes keyword appears in a multi-line body', () => {
+		expect(has_closes_keyword('## Summary\nSome text\n\ncloses #7\n')).toBe(true)
+	})
+
+	it('returns false when body has no closes keyword', () => {
+		expect(has_closes_keyword('## Summary\nSome unrelated text')).toBe(false)
+	})
+})
+
+describe('warn_if_missing_closes', () => {
+	const BRANCH = 'my-feature-branch'
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+		vi.spyOn(console, 'warn').mockImplementation(() => {
+			// suppress output during tests
+		})
+	})
+
+	it('prints a warning when PR body has no closes keyword', async () => {
+		mocked_pr_get_body.mockResolvedValue('## Summary\nNo issue link here')
+
+		await warn_if_missing_closes(BRANCH)
+
+		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('closes #N'))
+	})
+
+	it('prints no warning when PR body contains closes keyword', async () => {
+		mocked_pr_get_body.mockResolvedValue('closes #99\n\n## Details')
+
+		await warn_if_missing_closes(BRANCH)
+
+		expect(console.warn).not.toHaveBeenCalled()
+	})
+
+	it('prints a warning when PR body is undefined (fetch failed)', async () => {
+		// eslint-disable-next-line unicorn/no-useless-undefined -- simulating fetch failure
+		mocked_pr_get_body.mockResolvedValue(undefined)
+
+		await warn_if_missing_closes(BRANCH)
+
+		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('closes #N'))
+	})
+})
+
 describe('git_pr_followup.run — --merge flag', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.mocked(git_gh_command.repo_get_name_with_owner).mockResolvedValue('owner/repo')
 		vi.mocked(git_gh_command.issue_get_title).mockResolvedValue('Test issue')
 		vi.mocked(git_gh_command.pr_get_url).mockResolvedValue(PR_URL)
+		vi.mocked(git_gh_command.pr_get_body).mockResolvedValue('closes #42')
 		vi.mocked(git_pr_checks.wait_for_pr_success).mockResolvedValue({
 			rollup: [],
 			merge_state_status: undefined,

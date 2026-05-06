@@ -15,6 +15,7 @@ interface CommandEntry {
 	description: string
 	category: CommandCategory
 	tsx_arguments?: ReadonlyArray<string>
+	default_script_arguments?: ReadonlyArray<string>
 	requires_sveltekit?: true
 }
 

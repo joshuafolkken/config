@@ -116,6 +116,21 @@ pnpm josh git -y "<issue-title> #<issue-number>"
 > 日本語で書かれている場合は英語に変換する。すでに英語で書かれている場合でも、文法・明確さ・簡潔さの観点で改善できるなら書き換えて良い（AI ツールは実装前にタイトル品質を判断する）。
 > いずれの場合も `gh issue edit <number> --title "<english-title>"` で GitHub Issue タイトルを合わせて更新する。
 
+### Recovery after failed push (pre-push hook blocked)
+
+If `pnpm josh git -y` fails at the push step (e.g. blocked by the pre-push hook), fix the blocking issue and then recover with:
+
+```bash
+# 1. Push manually after fixing the issue
+git push --set-upstream origin <branch>
+
+# 2. Create the PR only — closes #N keyword is preserved
+pnpm josh pr
+# equivalent: pnpm josh git -y --skip-commit --skip-push
+```
+
+**Do not** run `gh pr create` directly — it bypasses `build_body` which generates `closes #N`, causing the Issue to remain open after merge.
+
 `fullrun` フローでは、コミット後かつ `pnpm josh followup --merge` 実行前に `/review` スキルを実行する。高・中優先度の指摘が見つかった場合は修正を行い、クリーンになるまで再度 `/review` を実行してから次のステップへ進む。
 
 ## Step 5: PR結果確認 + 完了通知（別スクリプト）
