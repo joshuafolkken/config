@@ -8,14 +8,27 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { overrides_check } from './overrides/overrides-logic'
+import { preinstall_version_update } from './preinstall-version-update'
 
 const PACKAGE_JSON_PATH = 'package.json'
 
-function run(arguments_: Array<string>): void {
+function run(arguments_: Array<string>): number {
 	const [cmd, ...rest] = arguments_
-	if (cmd === undefined) return
+	if (cmd === undefined) return 0
 	console.info(`\n▶ ${arguments_.join(' ')}`)
-	spawnSync(cmd, rest, { stdio: 'inherit', shell: false })
+	const result = spawnSync(cmd, rest, { stdio: 'inherit', shell: false })
+
+	return result.status ?? 1
+}
+
+function run_update(update_arguments: Array<string> | undefined): number {
+	if (update_arguments === undefined) {
+		console.info('\n⏭ No packages to update.')
+
+		return 0
+	}
+
+	return run(update_arguments)
 }
 
 function main(): void {
@@ -28,16 +41,15 @@ function main(): void {
 	}
 
 	const update_arguments = overrides_check.build_update_command(overrides, package_json_content)
+	const update_status = run_update(update_arguments)
 
-	if (update_arguments === undefined) {
-		console.info('\n⏭ No packages to update.')
-	} else {
-		run(update_arguments)
+	if (update_status === 0) {
+		preinstall_version_update.sync(PACKAGE_JSON_PATH)
 	}
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main()
 
-const latest_update = { run }
+const latest_update = { run, main }
 
 export { latest_update }
