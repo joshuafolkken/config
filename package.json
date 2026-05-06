@@ -1,5 +1,5 @@
 {
-	"version": "0.139.0",
+	"version": "0.140.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -108,5 +108,12 @@
 		"strip-json-comments": "^5.0.3",
 		"tsx": "^4.21.0",
 		"zod": "^4.4.3"
+	},
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": ">=11.0.0-0",
+			"onFail": "error"
+		}
 	}
 }
