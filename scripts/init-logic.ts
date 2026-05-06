@@ -11,6 +11,7 @@ const NPMRC_LINES: ReadonlyArray<string> = [
 	'//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}',
 	'engine-strict=true',
 	'minimum-release-age=1440',
+	'confirmModulesPurge=false',
 ]
 
 const CSPELL_IMPORT: Record<ProjectType, string> = {
