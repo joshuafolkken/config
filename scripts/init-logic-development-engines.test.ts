@@ -6,7 +6,7 @@ describe('get_development_engines_value', () => {
 		const result = init_logic.get_development_engines_value()
 
 		expect(result.packageManager.name).toBe('pnpm')
-		expect(result.packageManager.version).toBe('>=11.0.0')
+		expect(result.packageManager.version).toBe('>=11.0.0-0')
 		expect(result.packageManager.onFail).toBe('error')
 	})
 })
