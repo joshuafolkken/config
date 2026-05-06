@@ -194,6 +194,27 @@ describe('init_logic_json_merge.merge_development_dependencies', () => {
 	})
 })
 
+const DEV_ENGINES_KEY = 'devEngines'
+const DEV_ENGINES_VALUE = { packageManager: { name: 'pnpm', onFail: 'error' } }
+
+describe('init_logic_json_merge.merge_development_engines', () => {
+	it('adds devEngines when absent', () => {
+		const result = JSON.parse(
+			init_logic_json_merge.merge_development_engines('{"name":"app"}', DEV_ENGINES_VALUE),
+		) as Record<string, unknown>
+
+		expect(result[DEV_ENGINES_KEY]).toStrictEqual(DEV_ENGINES_VALUE)
+	})
+
+	it('returns content unchanged when devEngines already present', () => {
+		const content = JSON.stringify({ name: 'app', devEngines: { packageManager: { name: 'npm' } } })
+
+		expect(init_logic_json_merge.merge_development_engines(content, DEV_ENGINES_VALUE)).toBe(
+			content,
+		)
+	})
+})
+
 const NORMALIZE_NAME = 'my-app'
 const NORMALIZE_VERSION = '1.0.0'
 
@@ -227,6 +248,17 @@ describe('init_logic_json_merge.sort_package_json_keys', () => {
 		)
 
 		expect(keys.indexOf('dependencies')).toBeLessThan(keys.indexOf('devDependencies'))
+	})
+})
+
+describe('init_logic_json_merge.sort_package_json_keys (devEngines ordering)', () => {
+	it('places devEngines after engines', () => {
+		const input = JSON.stringify({ devEngines: {}, engines: {}, name: NORMALIZE_NAME })
+		const keys = Object.keys(
+			JSON.parse(init_logic_json_merge.sort_package_json_keys(input)) as object,
+		)
+
+		expect(keys.indexOf('engines')).toBeLessThan(keys.indexOf('devEngines'))
 	})
 })
 

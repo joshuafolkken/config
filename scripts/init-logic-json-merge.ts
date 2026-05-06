@@ -47,6 +47,7 @@ const PACKAGE_JSON_KEY_ORDER: ReadonlyArray<string> = [
 	'resolutions',
 	'packageManager',
 	'engines',
+	'devEngines',
 	'os',
 	'cpu',
 	'size-limit',
@@ -204,6 +205,13 @@ function merge_package_manager(content: string, value: string): string {
 	return `${JSON.stringify({ ...parsed, packageManager: value }, undefined, '\t')}\n`
 }
 
+function merge_development_engines(content: string, value: Record<string, unknown>): string {
+	const parsed = json_object_schema.parse(parse_jsonc(content))
+	if ('devEngines' in parsed) return content
+
+	return `${JSON.stringify({ ...parsed, devEngines: value }, undefined, '\t')}\n`
+}
+
 function sort_package_json_keys(content: string): string {
 	const parsed = json_object_schema.parse(parse_jsonc(content))
 	const all_keys = Object.keys(parsed)
@@ -226,6 +234,7 @@ const init_logic_json_merge = {
 	merge_package_scripts,
 	merge_development_dependencies,
 	merge_package_manager,
+	merge_development_engines,
 	sort_package_json_keys,
 }
 
