@@ -1,9 +1,9 @@
 {
-	"version": "0.136.0",
+	"version": "0.137.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
-	"packageManager": "pnpm@11.0.4+sha512.0a397165007a014ed52919a61e5f46c48b9bca88404c303ecaecc63f62def563898d3c6b8a5d5ea5811eb398cfe03ab05da1a5ce963f126d5ead4c02f93b83c3",
+	"packageManager": "pnpm@10.33.3+sha512.a19744364a7e248b92657a4ca5973f9354d21caf982579674b1c539f32c7420c47138ad8b1254df07aba9bc782d9b3029e3db34d5dbff974326eb74dac8ff489",
 	"engines": {
 		"node": ">=22.19.0"
 	},

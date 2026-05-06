@@ -65,8 +65,8 @@ describe('sync_file_mapping', () => {
 const WORKSPACE_YAML_NAME = 'pnpm-workspace.yaml'
 const WORKSPACE_SRC = path.join(TEST_DIR, 'src', WORKSPACE_YAML_NAME)
 const WORKSPACE_DEST = path.join(TEST_DIR, 'dest', WORKSPACE_YAML_NAME)
-const TEMPLATE_CONTENT =
-	'onlyBuiltDependencies:\n  - esbuild\n\nminimumReleaseAgeExclude:\n  - vite\n'
+const TEMPLATE_CONTENT = 'allowBuilds:\n  esbuild: true\n\nminimumReleaseAgeExclude:\n  - vite\n'
+const DEPRECATED_ONLY_BUILT_KEY = 'onlyBuiltDependencies:'
 
 describe('sync_workspace_yaml', () => {
 	it('writes template content when dest does not exist', () => {
@@ -76,8 +76,8 @@ describe('sync_workspace_yaml', () => {
 		expect(readFileSync(WORKSPACE_DEST, 'utf8')).toBe(TEMPLATE_CONTENT)
 	})
 
-	it('preserves user-defined keys when dest already exists', () => {
-		const existing = 'packages:\n  - "@joshuafolkken/kit"\nonlyBuiltDependencies:\n  - esbuild\n'
+	it('preserves user-defined keys and drops deprecated onlyBuiltDependencies', () => {
+		const existing = `packages:\n  - "@joshuafolkken/kit"\n${DEPRECATED_ONLY_BUILT_KEY}\n  - esbuild\n`
 
 		writeFileSync(WORKSPACE_SRC, TEMPLATE_CONTENT)
 		writeFileSync(WORKSPACE_DEST, existing)
@@ -86,7 +86,7 @@ describe('sync_workspace_yaml', () => {
 		const result = readFileSync(WORKSPACE_DEST, 'utf8')
 
 		expect(result).toContain('packages:')
-		expect(result).toContain('onlyBuiltDependencies:')
+		expect(result).not.toContain(DEPRECATED_ONLY_BUILT_KEY)
 	})
 
 	it('creates destination directory when workspace dest path does not exist', () => {
@@ -98,8 +98,8 @@ describe('sync_workspace_yaml', () => {
 		expect(existsSync(nested)).toBe(true)
 	})
 
-	it('overwrites kit-managed keys with template values', () => {
-		const existing = 'onlyBuiltDependencies:\n  - old-value\n'
+	it('drops deprecated onlyBuiltDependencies and uses template allowBuilds', () => {
+		const existing = `${DEPRECATED_ONLY_BUILT_KEY}\n  - old-value\n`
 
 		writeFileSync(WORKSPACE_SRC, TEMPLATE_CONTENT)
 		writeFileSync(WORKSPACE_DEST, existing)
@@ -107,7 +107,8 @@ describe('sync_workspace_yaml', () => {
 
 		const result = readFileSync(WORKSPACE_DEST, 'utf8')
 
-		expect(result).toContain('  - esbuild')
+		expect(result).toContain('allowBuilds:')
+		expect(result).not.toContain(DEPRECATED_ONLY_BUILT_KEY)
 		expect(result).not.toContain('old-value')
 	})
 })
