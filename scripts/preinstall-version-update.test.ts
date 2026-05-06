@@ -36,9 +36,22 @@ describe('preinstall_version_update.extract_pinned_version', () => {
 	})
 })
 
+describe('preinstall_version_update.fetch_latest_version', () => {
+	it('passes a timeout option to spawnSync', () => {
+		spawn_mock.mockReturnValue({ status: 0, stdout: '1.5.1\n' })
+		preinstall_version_update.fetch_latest_version()
+
+		expect(spawn_mock).toHaveBeenCalledWith('npm', ['view', '@aikidosec/safe-chain', 'version'], {
+			encoding: 'utf8',
+			shell: false,
+			timeout: 30_000,
+		})
+	})
+})
+
 describe('preinstall_version_update.rewrite_version', () => {
 	it('replaces the pinned version in the content', () => {
-		expect(preinstall_version_update.rewrite_version(PREINSTALL, '2.0.0')).toBe(
+		expect(preinstall_version_update.rewrite_version(PREINSTALL, '1.5.1', '2.0.0')).toBe(
 			'pnpm dlx @aikidosec/safe-chain@2.0.0 setup-ci',
 		)
 	})

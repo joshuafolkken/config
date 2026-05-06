@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const spawn_mock = vi.hoisted(() => vi.fn())
+const spawn_mock = vi.hoisted(() => vi.fn().mockReturnValue({ status: 0 }))
+const sync_mock = vi.hoisted(() => vi.fn())
 
 vi.mock('node:child_process', () => ({ spawnSync: spawn_mock }))
 vi.mock('node:fs', () => ({ readFileSync: vi.fn().mockReturnValue('{"pnpm":{"overrides":{}}}') }))
+vi.mock('./preinstall-version-update', () => ({
+	preinstall_version_update: { sync: sync_mock },
+}))
 vi.mock('./overrides/overrides-logic', () => ({
 	overrides_check: {
 		read_overrides_from_package: vi.fn().mockReturnValue({}),
@@ -43,5 +47,37 @@ describe('latest_update.run — spawnSync dispatch', () => {
 			expect.any(Array),
 			expect.objectContaining({ stdio: 'inherit' }),
 		)
+	})
+
+	it('returns the exit code from spawnSync', () => {
+		spawn_mock.mockReturnValueOnce({ status: 42 })
+
+		expect(latest_update.run([PNPM, ...UPDATE_ARGS])).toBe(42)
+	})
+
+	it('returns 1 when spawnSync status is absent', () => {
+		spawn_mock.mockReturnValueOnce({})
+
+		expect(latest_update.run([PNPM, ...UPDATE_ARGS])).toBe(1)
+	})
+})
+
+describe('latest_update.main — preinstall sync guard', () => {
+	beforeEach(() => {
+		sync_mock.mockReset()
+		spawn_mock.mockReturnValue({ status: 0 })
+	})
+
+	it('calls preinstall sync when update succeeds', () => {
+		latest_update.main()
+
+		expect(sync_mock).toHaveBeenCalled()
+	})
+
+	it('skips preinstall sync when update fails', () => {
+		spawn_mock.mockReturnValue({ status: 1 })
+		latest_update.main()
+
+		expect(sync_mock).not.toHaveBeenCalled()
 	})
 })

@@ -2,7 +2,8 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const SAFE_CHAIN_PKG = '@aikidosec/safe-chain'
-const VERSION_RE = /@aikidosec\/safe-chain@([\d.]+)/u
+const VERSION_RE = /@aikidosec\/safe-chain@([^\s"']+)/u
+const NPM_TIMEOUT_MS = 30_000
 
 interface PreinstallInfo {
 	content: string
@@ -18,14 +19,18 @@ function fetch_latest_version(): string | undefined {
 	const result = spawnSync('npm', ['view', SAFE_CHAIN_PKG, 'version'], {
 		encoding: 'utf8',
 		shell: false,
+		timeout: NPM_TIMEOUT_MS,
 	})
 	if (result.status !== 0 || !result.stdout) return undefined
 
 	return result.stdout.trim()
 }
 
-function rewrite_version(content: string, next_version: string): string {
-	return content.replace(VERSION_RE, `${SAFE_CHAIN_PKG}@${next_version}`)
+function rewrite_version(content: string, current_version: string, next_version: string): string {
+	return content.replace(
+		`${SAFE_CHAIN_PKG}@${current_version}`,
+		`${SAFE_CHAIN_PKG}@${next_version}`,
+	)
 }
 
 function read_preinstall_info(package_json_path: string): PreinstallInfo | undefined {
@@ -53,7 +58,7 @@ function write_if_updated(
 	}
 
 	console.info(`\n↑ Updating ${SAFE_CHAIN_PKG} preinstall: ${current} → ${latest}`)
-	writeFileSync(package_json_path, rewrite_version(content, latest), 'utf8')
+	writeFileSync(package_json_path, rewrite_version(content, current, latest), 'utf8')
 }
 
 function sync(package_json_path: string): void {
