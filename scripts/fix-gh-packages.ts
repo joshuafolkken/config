@@ -105,8 +105,7 @@ async function apply_fixes(cwd: string, scopes: Set<string>, token: string): Pro
 	console.info('fix-gh-packages: restored GitHub Packages tarball URLs in pnpm-lock.yaml')
 }
 
-async function main(): Promise<void> {
-	const cwd = process.cwd()
+async function run_main(cwd: string): Promise<void> {
 	const npmrc = read_file(path.join(cwd, NPMRC))
 	const scopes = fix_gh_packages_logic.parse_gh_scopes(npmrc)
 	if (scopes.size === 0) return
@@ -119,6 +118,14 @@ async function main(): Promise<void> {
 	}
 
 	await apply_fixes(cwd, scopes, token)
+}
+
+async function main(): Promise<void> {
+	try {
+		await run_main(process.cwd())
+	} catch (error) {
+		console.warn(`fix-gh-packages: skipped due to error: ${String(error)}`)
+	}
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) await main()

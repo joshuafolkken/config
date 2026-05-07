@@ -220,7 +220,7 @@ function merge_package_script_suffix(content: string, key: string, cmd: string):
 	const scripts = string_record_schema.parse(raw)
 	const existing = scripts[key]
 	if (existing === undefined || existing.includes(cmd)) return content
-	const updated_value = `${existing} && ${cmd}`
+	const updated_value = existing.trim().length === 0 ? cmd : `${existing} && ${cmd}`
 
 	return `${JSON.stringify({ ...parsed, scripts: { ...scripts, [key]: updated_value } }, undefined, '\t')}\n`
 }
