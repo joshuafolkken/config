@@ -26,6 +26,7 @@ const CSPELL_IMPORT: Record<ProjectType, string> = {
 
 const LEFTHOOK_INSTALL_CMD = 'lefthook install'
 const SAFE_CHAIN_CMD = 'pnpm dlx @aikidosec/safe-chain setup-ci'
+const FIX_GH_PACKAGES_CMD = 'tsx node_modules/@joshuafolkken/kit/scripts/fix-gh-packages.ts'
 
 const AI_COPY_FILES: ReadonlyArray<string> = [
 	'CLAUDE.md',
@@ -76,7 +77,7 @@ const TSCONFIG_EXTENDS: Record<ProjectType, string> = {
 
 const SUGGESTED_SCRIPTS_COMMON: Record<string, string> = {
 	preinstall: SAFE_CHAIN_CMD,
-	postinstall: LEFTHOOK_INSTALL_CMD,
+	postinstall: `${LEFTHOOK_INSTALL_CMD} && ${FIX_GH_PACKAGES_CMD}`,
 	josh: 'josh',
 }
 
@@ -161,6 +162,14 @@ function get_suggested_scripts(type: ProjectType): Record<string, string> {
 	return SUGGESTED_SCRIPTS_COMMON
 }
 
+function merge_postinstall_fix_cmd(content: string): string {
+	return init_logic_json_merge.merge_package_script_suffix(
+		content,
+		'postinstall',
+		FIX_GH_PACKAGES_CMD,
+	)
+}
+
 function transform_prompt_paths(content: string): string {
 	return content.replaceAll(/`prompts\/([^`]+)`/gu, `\`${PROMPTS_PACKAGE_PREFIX}$1\``)
 }
@@ -204,6 +213,7 @@ const init_logic = {
 	get_ai_copy_file_mappings,
 	get_ai_copy_directories,
 	get_suggested_scripts,
+	merge_postinstall_fix_cmd,
 	transform_prompt_paths,
 }
 
