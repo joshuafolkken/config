@@ -157,6 +157,47 @@ describe('init_logic_json_merge.merge_package_scripts', () => {
 	})
 })
 
+const POSTINSTALL_KEY = 'postinstall'
+const LEFTHOOK_CMD = 'lefthook install'
+const FIX_GH_CMD = 'tsx node_modules/@joshuafolkken/kit/scripts/fix-gh-packages.ts'
+
+describe('init_logic_json_merge.merge_package_script_suffix', () => {
+	it('appends cmd to existing script when cmd is absent', () => {
+		const content = JSON.stringify({ scripts: { [POSTINSTALL_KEY]: LEFTHOOK_CMD } })
+		const result = JSON.parse(
+			init_logic_json_merge.merge_package_script_suffix(content, POSTINSTALL_KEY, FIX_GH_CMD),
+		) as { scripts: Record<string, string> }
+
+		expect(result.scripts[POSTINSTALL_KEY]).toBe(`${LEFTHOOK_CMD} && ${FIX_GH_CMD}`)
+	})
+
+	it('returns content unchanged when cmd already present', () => {
+		const content = JSON.stringify({
+			scripts: { [POSTINSTALL_KEY]: `${LEFTHOOK_CMD} && ${FIX_GH_CMD}` },
+		})
+
+		expect(
+			init_logic_json_merge.merge_package_script_suffix(content, POSTINSTALL_KEY, FIX_GH_CMD),
+		).toBe(content)
+	})
+
+	it('returns content unchanged when key is absent', () => {
+		const content = JSON.stringify({ scripts: {} })
+
+		expect(
+			init_logic_json_merge.merge_package_script_suffix(content, POSTINSTALL_KEY, FIX_GH_CMD),
+		).toBe(content)
+	})
+
+	it('returns content unchanged when scripts block is absent', () => {
+		const content = '{}'
+
+		expect(
+			init_logic_json_merge.merge_package_script_suffix(content, POSTINSTALL_KEY, FIX_GH_CMD),
+		).toBe(content)
+	})
+})
+
 describe('init_logic_json_merge.merge_development_dependencies', () => {
 	it('adds missing devDependency', () => {
 		const result = JSON.parse(

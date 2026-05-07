@@ -212,6 +212,19 @@ function merge_development_engines(content: string, value: Record<string, unknow
 	return `${JSON.stringify({ ...parsed, devEngines: value }, undefined, '\t')}\n`
 }
 
+function merge_package_script_suffix(content: string, key: string, cmd: string): string {
+	const parsed = json_object_schema.parse(parse_jsonc(content))
+	// eslint-disable-next-line dot-notation -- Record<string, unknown> requires bracket notation per noPropertyAccessFromIndexSignature
+	const raw = parsed['scripts']
+	if (raw === undefined) return content
+	const scripts = string_record_schema.parse(raw)
+	const existing = scripts[key]
+	if (existing === undefined || existing.includes(cmd)) return content
+	const updated_value = `${existing} && ${cmd}`
+
+	return `${JSON.stringify({ ...parsed, scripts: { ...scripts, [key]: updated_value } }, undefined, '\t')}\n`
+}
+
 function sort_package_json_keys(content: string): string {
 	const parsed = json_object_schema.parse(parse_jsonc(content))
 	const all_keys = Object.keys(parsed)
@@ -232,6 +245,7 @@ const init_logic_json_merge = {
 	merge_yaml_list_entry,
 	merge_cspell_import,
 	merge_package_scripts,
+	merge_package_script_suffix,
 	merge_development_dependencies,
 	merge_package_manager,
 	merge_development_engines,

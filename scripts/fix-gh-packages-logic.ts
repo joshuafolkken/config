@@ -1,0 +1,143 @@
+const GH_PACKAGES_HOST = 'npm.pkg.github.com'
+const RESOLUTION_BLOCK = '\n    resolution:\n'
+const INTEGRITY_PREFIX = '      integrity: '
+const TARBALL_PREFIX = '      tarball: '
+const NPMRC_AUTH_TOKEN_PREFIX = `//${GH_PACKAGES_HOST}/:_authToken=`
+const REGISTRY_KEY = ':registry='
+
+interface PackageResolution {
+	integrity?: string | undefined
+	tarball?: string | undefined
+}
+
+interface LockfilePackage {
+	resolution?: PackageResolution | undefined
+}
+
+function is_gh_registry_line(line: string): string | undefined {
+	const trimmed = line.trim()
+	if (!trimmed.startsWith('@')) return undefined
+	const eq_index = trimmed.indexOf(REGISTRY_KEY)
+	if (eq_index === -1) return undefined
+	const registry = trimmed.slice(eq_index + REGISTRY_KEY.length).trim()
+	if (registry !== `https://${GH_PACKAGES_HOST}`) return undefined
+
+	return trimmed.slice(0, eq_index)
+}
+
+function parse_gh_scopes(npmrc: string): Set<string> {
+	const scopes = new Set<string>()
+
+	for (const line of npmrc.split('\n')) {
+		const scope = is_gh_registry_line(line)
+		if (scope !== undefined) scopes.add(scope)
+	}
+
+	return scopes
+}
+
+function extract_auth_token_from_line(line: string): string | undefined {
+	const trimmed = line.trim()
+	if (!trimmed.startsWith(NPMRC_AUTH_TOKEN_PREFIX)) return undefined
+	const value = trimmed.slice(NPMRC_AUTH_TOKEN_PREFIX.length)
+	if (value.startsWith('${') || value.length === 0) return undefined
+
+	return value
+}
+
+function parse_npmrc_auth_token(npmrc: string): string | undefined {
+	for (const line of npmrc.split('\n')) {
+		const token = extract_auth_token_from_line(line)
+		if (token !== undefined) return token
+	}
+
+	return undefined
+}
+
+function scope_from_key(key: string): string {
+	return key.startsWith('@') ? (key.split('/')[0] ?? '') : ''
+}
+
+function has_tarball(entry: LockfilePackage): boolean {
+	return entry.resolution?.tarball !== undefined
+}
+
+function package_path_from_key(key: string): string {
+	const start = key.startsWith('@') ? 1 : 0
+	const at_index = key.indexOf('@', start)
+
+	return at_index === -1 ? key : key.slice(0, at_index)
+}
+
+function package_version_from_key(key: string): string {
+	const start = key.startsWith('@') ? 1 : 0
+	const at_index = key.indexOf('@', start)
+	if (at_index === -1) return ''
+
+	return key.slice(at_index + 1).split('(')[0] ?? ''
+}
+
+function needs_tarball_fix(key: string, entry: LockfilePackage, scopes: Set<string>): boolean {
+	if (has_tarball(entry)) return false
+	const scope = scope_from_key(key)
+
+	return scope.length > 0 && scopes.has(scope)
+}
+
+function find_entry_start(content: string, package_key: string): number {
+	const single = content.indexOf(`\n  '${package_key}':\n`)
+	if (single !== -1) return single
+
+	return content.indexOf(`\n  "${package_key}":\n`)
+}
+
+function find_entry_end(content: string, entry_start: number): number {
+	const next_match = /\n {2}['"]/u.exec(content.slice(entry_start + 1))
+
+	return next_match === null ? content.length : entry_start + 1 + next_match.index
+}
+
+function find_integrity_eol_in_entry(entry_content: string): number {
+	const resolution_pos = entry_content.indexOf(RESOLUTION_BLOCK)
+	if (resolution_pos === -1) return -1
+	const integrity_pos = entry_content.indexOf(INTEGRITY_PREFIX, resolution_pos)
+	if (integrity_pos === -1) return -1
+
+	return entry_content.indexOf('\n', integrity_pos)
+}
+
+function insert_tarball_for_key(content: string, package_key: string, tarball: string): string {
+	const entry_start = find_entry_start(content, package_key)
+	if (entry_start === -1) return content
+	const entry_end = find_entry_end(content, entry_start)
+	const entry_content = content.slice(entry_start, entry_end)
+	const integrity_eol = find_integrity_eol_in_entry(entry_content)
+	if (integrity_eol === -1) return content
+	if (entry_content.slice(integrity_eol + 1).startsWith(TARBALL_PREFIX)) return content
+	const patched = `${entry_content.slice(0, integrity_eol + 1)}${TARBALL_PREFIX}${tarball}\n${entry_content.slice(integrity_eol + 1)}`
+
+	return content.slice(0, entry_start) + patched + content.slice(entry_end)
+}
+
+function patch_lockfile(content: string, patches: Map<string, string>): string {
+	let result = content
+
+	for (const [key, tarball] of patches) {
+		result = insert_tarball_for_key(result, key, tarball)
+	}
+
+	return result
+}
+
+const fix_gh_packages_logic = {
+	parse_gh_scopes,
+	parse_npmrc_auth_token,
+	package_path_from_key,
+	package_version_from_key,
+	needs_tarball_fix,
+	insert_tarball_for_key,
+	patch_lockfile,
+}
+
+export { fix_gh_packages_logic }
+export type { LockfilePackage, PackageResolution }
