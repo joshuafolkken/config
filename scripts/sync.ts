@@ -117,6 +117,22 @@ function sync_playwright_config(destination_path: string): void {
 	console.info('  ✔ synced    playwright.config.ts')
 }
 
+function sync_deploy_vps(destination_path: string): void {
+	if (!existsSync(destination_path)) return
+
+	const existing = readFileSync(destination_path, 'utf8')
+	const patched = init_logic.patch_deploy_vps_pnpm(existing)
+
+	if (patched === existing) {
+		console.info('  ✔ unchanged deploy-vps.yml')
+
+		return
+	}
+
+	writeFileSync(destination_path, patched)
+	console.info('  ✔ synced    deploy-vps.yml')
+}
+
 function sync_sonar_with_template(): void {
 	const destination = init_logic.get_sonar_template_destination()
 	const name_with_owner = gh_spawn.get_repo_name_with_owner()
@@ -155,6 +171,7 @@ function main(): void {
 	sync_ai_copy_all()
 	sync_prettier_config(path.join(PROJECT_ROOT, 'prettier.config.js'))
 	sync_playwright_config(path.join(PROJECT_ROOT, 'playwright.config.ts'))
+	sync_deploy_vps(path.join(PROJECT_ROOT, '.github/workflows/deploy-vps.yml'))
 	sync_sonar_with_template()
 	console.info('\n✅ Done.\n')
 }
@@ -167,6 +184,7 @@ const sync = {
 	sync_workspace_yaml,
 	sync_prettier_config,
 	sync_playwright_config,
+	sync_deploy_vps,
 	migrate_prettierrc,
 }
 
