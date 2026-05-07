@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,6 +10,7 @@ const LOCKFILE = 'pnpm-lock.yaml'
 const NPMRC = '.npmrc'
 const GH_PACKAGES_HOST = 'npm.pkg.github.com'
 const FETCH_TIMEOUT_MS = 10_000
+const GH_CLI_TIMEOUT_MS = 5000
 
 const npm_distribution_schema = z.looseObject({ tarball: z.string().optional() })
 const npm_version_schema = z.looseObject({ dist: npm_distribution_schema.optional() })
@@ -33,11 +35,22 @@ function read_file(file_path: string): string {
 	return existsSync(file_path) ? readFileSync(file_path, 'utf8') : ''
 }
 
+function get_gh_cli_token(): string | undefined {
+	try {
+		// eslint-disable-next-line sonarjs/no-os-command-from-path -- trusted developer CLI; PATH is controlled by the developer
+		const token = execSync('gh auth token', { encoding: 'utf8', timeout: GH_CLI_TIMEOUT_MS }).trim()
+
+		return token.length > 0 ? token : undefined
+	} catch {
+		return undefined
+	}
+}
+
 function get_effective_auth_token(npmrc: string): string | undefined {
 	const environment_token = process.env['NODE_AUTH_TOKEN']?.trim()
-	if (environment_token !== undefined && environment_token.length > 0) return environment_token
+	const npmrc_token = fix_gh_packages_logic.parse_npmrc_auth_token(npmrc)
 
-	return fix_gh_packages_logic.parse_npmrc_auth_token(npmrc)
+	return fix_gh_packages_logic.resolve_token(environment_token, npmrc_token, get_gh_cli_token)
 }
 
 async function fetch_tarball_url(
@@ -112,7 +125,9 @@ async function run_main(cwd: string): Promise<void> {
 	const token = get_effective_auth_token(npmrc)
 
 	if (token === undefined) {
-		console.warn('fix-gh-packages: no auth token found — set NODE_AUTH_TOKEN and re-run')
+		console.warn(
+			'fix-gh-packages: no auth token found — run `gh auth login` or set NODE_AUTH_TOKEN',
+		)
 
 		return
 	}
