@@ -146,7 +146,10 @@ function insert_flow_tarball(
 	const entry_content = content.slice(entry_start, entry_end)
 	const brace_pos = find_flow_resolution_brace(entry_content)
 	if (brace_pos === -1) return undefined
-	if (entry_content.slice(0, brace_pos).includes(FLOW_TARBALL_KEY)) return content
+	const open_brace = entry_content.lastIndexOf('{', brace_pos)
+	if (open_brace === -1) return undefined
+	const flow_body = entry_content.slice(open_brace + 1, brace_pos)
+	if (/\btarball\s*:/u.test(flow_body)) return content
 	const patched = `${entry_content.slice(0, brace_pos)}${FLOW_TARBALL_KEY}${tarball}${entry_content.slice(brace_pos)}`
 
 	return content.slice(0, entry_start) + patched + content.slice(entry_end)

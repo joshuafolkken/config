@@ -218,6 +218,8 @@ describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style insertion', 
 	})
 })
 
+const TARBALL_FIRST_FLOW_LOCKFILE = `lockfileVersion: '9.0'\n\npackages:\n\n  '${PKG_KEY}':\n    resolution: {tarball: ${TARBALL_URL}, integrity: ${INTEGRITY}}\n\nsnapshots:\n`
+
 describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style edge cases', () => {
 	it('is idempotent when tarball already present in flow-style resolution', () => {
 		const with_tarball = fix_gh_packages_logic.insert_tarball_for_key(
@@ -229,6 +231,16 @@ describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style edge cases',
 		expect(fix_gh_packages_logic.insert_tarball_for_key(with_tarball, PKG_KEY, TARBALL_URL)).toBe(
 			with_tarball,
 		)
+	})
+
+	it('returns unchanged when tarball is first field in flow-style resolution', () => {
+		expect(
+			fix_gh_packages_logic.insert_tarball_for_key(
+				TARBALL_FIRST_FLOW_LOCKFILE,
+				PKG_KEY,
+				TARBALL_URL,
+			),
+		).toBe(TARBALL_FIRST_FLOW_LOCKFILE)
 	})
 })
 
