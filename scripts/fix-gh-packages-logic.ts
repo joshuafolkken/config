@@ -19,7 +19,10 @@ function is_gh_registry_line(line: string): string | undefined {
 	if (!trimmed.startsWith('@')) return undefined
 	const eq_index = trimmed.indexOf(REGISTRY_KEY)
 	if (eq_index === -1) return undefined
-	const registry = trimmed.slice(eq_index + REGISTRY_KEY.length).trim()
+	const registry = trimmed
+		.slice(eq_index + REGISTRY_KEY.length)
+		.trim()
+		.replace(/\/$/u, '')
 	if (registry !== `https://${GH_PACKAGES_HOST}`) return undefined
 
 	return trimmed.slice(0, eq_index)

@@ -8,6 +8,7 @@ import { fix_gh_packages_logic } from './fix-gh-packages-logic'
 const LOCKFILE = 'pnpm-lock.yaml'
 const NPMRC = '.npmrc'
 const GH_PACKAGES_HOST = 'npm.pkg.github.com'
+const FETCH_TIMEOUT_MS = 10_000
 
 const npm_distribution_schema = z.looseObject({ tarball: z.string().optional() })
 const npm_version_schema = z.looseObject({ dist: npm_distribution_schema.optional() })
@@ -45,7 +46,10 @@ async function fetch_tarball_url(
 	token: string,
 ): Promise<string | undefined> {
 	const url = `https://${GH_PACKAGES_HOST}/${package_path}`
-	const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+	const response = await fetch(url, {
+		headers: { Authorization: `Bearer ${token}` },
+		signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+	})
 
 	if (!response.ok) {
 		console.warn(`fix-gh-packages: fetch failed for ${package_path} (${String(response.status)})`)

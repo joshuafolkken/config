@@ -40,6 +40,14 @@ describe('fix_gh_packages_logic.parse_gh_scopes', () => {
 	it('returns empty set for empty npmrc', () => {
 		expect(fix_gh_packages_logic.parse_gh_scopes('').size).toBe(0)
 	})
+
+	it('matches registry entry with trailing slash', () => {
+		const result = fix_gh_packages_logic.parse_gh_scopes(
+			'@joshuafolkken:registry=https://npm.pkg.github.com/\n',
+		)
+
+		expect(result.has(GH_SCOPE)).toBe(true)
+	})
 })
 
 describe('fix_gh_packages_logic.parse_npmrc_auth_token', () => {
