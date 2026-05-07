@@ -2,6 +2,8 @@ const GH_PACKAGES_HOST = 'npm.pkg.github.com'
 const RESOLUTION_BLOCK = '\n    resolution:\n'
 const INTEGRITY_PREFIX = '      integrity: '
 const TARBALL_PREFIX = '      tarball: '
+const FLOW_RESOLUTION_LINE_START = '\n    resolution: {'
+const FLOW_TARBALL_KEY = ', tarball: '
 const NPMRC_AUTH_TOKEN_PREFIX = `//${GH_PACKAGES_HOST}/:_authToken=`
 const REGISTRY_KEY = ':registry='
 
@@ -109,17 +111,57 @@ function find_integrity_eol_in_entry(entry_content: string): number {
 	return entry_content.indexOf('\n', integrity_pos)
 }
 
-function insert_tarball_for_key(content: string, package_key: string, tarball: string): string {
-	const entry_start = find_entry_start(content, package_key)
-	if (entry_start === -1) return content
-	const entry_end = find_entry_end(content, entry_start)
+function find_flow_resolution_brace(entry_content: string): number {
+	const pos = entry_content.indexOf(FLOW_RESOLUTION_LINE_START)
+	if (pos === -1) return -1
+	const line_end = entry_content.indexOf('\n', pos + 1)
+	const search_end = line_end === -1 ? entry_content.length : line_end
+	const brace = entry_content.lastIndexOf('}', search_end)
+	if (brace <= pos) return -1
+
+	return brace
+}
+
+function insert_expanded_tarball(
+	content: string,
+	entry_start: number,
+	entry_end: number,
+	tarball: string,
+): string | undefined {
 	const entry_content = content.slice(entry_start, entry_end)
 	const integrity_eol = find_integrity_eol_in_entry(entry_content)
-	if (integrity_eol === -1) return content
+	if (integrity_eol === -1) return undefined
 	if (entry_content.slice(integrity_eol + 1).startsWith(TARBALL_PREFIX)) return content
 	const patched = `${entry_content.slice(0, integrity_eol + 1)}${TARBALL_PREFIX}${tarball}\n${entry_content.slice(integrity_eol + 1)}`
 
 	return content.slice(0, entry_start) + patched + content.slice(entry_end)
+}
+
+function insert_flow_tarball(
+	content: string,
+	entry_start: number,
+	entry_end: number,
+	tarball: string,
+): string | undefined {
+	const entry_content = content.slice(entry_start, entry_end)
+	const brace_pos = find_flow_resolution_brace(entry_content)
+	if (brace_pos === -1) return undefined
+	if (entry_content.slice(0, brace_pos).includes(FLOW_TARBALL_KEY)) return content
+	const patched = `${entry_content.slice(0, brace_pos)}${FLOW_TARBALL_KEY}${tarball}${entry_content.slice(brace_pos)}`
+
+	return content.slice(0, entry_start) + patched + content.slice(entry_end)
+}
+
+function insert_tarball_for_key(content: string, package_key: string, tarball: string): string {
+	const entry_start = find_entry_start(content, package_key)
+	if (entry_start === -1) return content
+	const entry_end = find_entry_end(content, entry_start)
+
+	return (
+		insert_expanded_tarball(content, entry_start, entry_end, tarball) ??
+		insert_flow_tarball(content, entry_start, entry_end, tarball) ??
+		content
+	)
 }
 
 function patch_lockfile(content: string, patches: Map<string, string>): string {
