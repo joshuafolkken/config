@@ -244,6 +244,46 @@ describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style edge cases',
 	})
 })
 
+describe('fix_gh_packages_logic.resolve_token', () => {
+	it('returns env token when all three are present', () => {
+		expect(fix_gh_packages_logic.resolve_token('env-tok', 'npmrc-tok', () => 'gh-tok')).toBe(
+			'env-tok',
+		)
+	})
+
+	it('returns npmrc token when env is absent', () => {
+		expect(fix_gh_packages_logic.resolve_token(undefined, 'npmrc-tok', () => 'gh-tok')).toBe(
+			'npmrc-tok',
+		)
+	})
+
+	it('returns gh token when env and npmrc are absent', () => {
+		expect(fix_gh_packages_logic.resolve_token(undefined, undefined, () => 'gh-tok')).toBe('gh-tok')
+	})
+
+	it('returns undefined when fallback returns undefined', () => {
+		const absent: string | undefined = undefined
+
+		expect(fix_gh_packages_logic.resolve_token(undefined, undefined, () => absent)).toBeUndefined()
+	})
+
+	it('does not call fallback when env token is present', () => {
+		let is_called = false
+
+		fix_gh_packages_logic.resolve_token('env-tok', undefined, () => {
+			is_called = true
+
+			return 'gh-tok'
+		})
+
+		expect(is_called).toBe(false)
+	})
+
+	it('skips empty-string env token and returns npmrc token', () => {
+		expect(fix_gh_packages_logic.resolve_token('', 'npmrc-tok', () => 'gh-tok')).toBe('npmrc-tok')
+	})
+})
+
 const OTHER_TARBALL_URL = 'https://npm.pkg.github.com/download/@joshuafolkken/other/1.0.0/xyz'
 
 describe('fix_gh_packages_logic.patch_lockfile', () => {
