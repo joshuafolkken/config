@@ -16,7 +16,7 @@ const VERSIONING_COMMANDS: Record<string, CommandEntry> = {
 		shell: [
 			'sh',
 			'-c',
-			"pnpm add -D @joshuafolkken/kit@$(gh api '/users/joshuafolkken/packages/npm/kit/versions?per_page=1' --jq '.[0].name')",
+			"pnpm add -D @joshuafolkken/kit@$(gh api '/users/joshuafolkken/packages/npm/kit/versions?per_page=1' --jq '.[0].name') && node_modules/.bin/tsx node_modules/@joshuafolkken/kit/scripts/fix-gh-packages.ts",
 		],
 		description: 'Upgrade @joshuafolkken/kit to latest version',
 		category: 'Versioning',
