@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { load } from 'js-yaml'
@@ -128,4 +128,5 @@ async function main(): Promise<void> {
 	}
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) await main()
+const [, argv1] = process.argv
+if (argv1 !== undefined && realpathSync(argv1) === fileURLToPath(import.meta.url)) await main()
