@@ -140,6 +140,10 @@ describe('pnpm-workspace.yaml built-dependency lists', () => {
 		expect(allow_builds).toMatchObject({ esbuild: true, lefthook: true, 'unrs-resolver': true })
 	})
 
+	it('blocks kit postinstall to prevent lefthook-not-found errors in CI', () => {
+		expect(allow_builds['@joshuafolkken/kit']).toBe(false)
+	})
+
 	it('package.json does not duplicate onlyBuiltDependencies', () => {
 		const manifest = load_manifest()
 
