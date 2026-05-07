@@ -194,6 +194,56 @@ describe('fix_gh_packages_logic.insert_tarball_for_key - edge cases', () => {
 	})
 })
 
+const FLOW_LOCKFILE_WITH_ENTRY = `lockfileVersion: '9.0'\n\npackages:\n\n  '${PKG_KEY}':\n    resolution: {integrity: ${INTEGRITY}}\n\nsnapshots:\n`
+
+describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style insertion', () => {
+	it('inserts tarball before closing brace in flow-style resolution', () => {
+		const result = fix_gh_packages_logic.insert_tarball_for_key(
+			FLOW_LOCKFILE_WITH_ENTRY,
+			PKG_KEY,
+			TARBALL_URL,
+		)
+
+		expect(result).toContain(`{integrity: ${INTEGRITY}, tarball: ${TARBALL_URL}}`)
+	})
+
+	it('does not add expanded-YAML tarball line to flow-style entry', () => {
+		const result = fix_gh_packages_logic.insert_tarball_for_key(
+			FLOW_LOCKFILE_WITH_ENTRY,
+			PKG_KEY,
+			TARBALL_URL,
+		)
+
+		expect(result).not.toContain(`      tarball: ${TARBALL_URL}`)
+	})
+})
+
+const TARBALL_FIRST_FLOW_LOCKFILE = `lockfileVersion: '9.0'\n\npackages:\n\n  '${PKG_KEY}':\n    resolution: {tarball: ${TARBALL_URL}, integrity: ${INTEGRITY}}\n\nsnapshots:\n`
+
+describe('fix_gh_packages_logic.insert_tarball_for_key - flow-style edge cases', () => {
+	it('is idempotent when tarball already present in flow-style resolution', () => {
+		const with_tarball = fix_gh_packages_logic.insert_tarball_for_key(
+			FLOW_LOCKFILE_WITH_ENTRY,
+			PKG_KEY,
+			TARBALL_URL,
+		)
+
+		expect(fix_gh_packages_logic.insert_tarball_for_key(with_tarball, PKG_KEY, TARBALL_URL)).toBe(
+			with_tarball,
+		)
+	})
+
+	it('returns unchanged when tarball is first field in flow-style resolution', () => {
+		expect(
+			fix_gh_packages_logic.insert_tarball_for_key(
+				TARBALL_FIRST_FLOW_LOCKFILE,
+				PKG_KEY,
+				TARBALL_URL,
+			),
+		).toBe(TARBALL_FIRST_FLOW_LOCKFILE)
+	})
+})
+
 const OTHER_TARBALL_URL = 'https://npm.pkg.github.com/download/@joshuafolkken/other/1.0.0/xyz'
 
 describe('fix_gh_packages_logic.patch_lockfile', () => {
