@@ -177,6 +177,17 @@ function patch_lockfile(content: string, patches: Map<string, string>): string {
 	return result
 }
 
+function resolve_token(
+	environment_token: string | undefined,
+	npmrc_token: string | undefined,
+	get_fallback_token: () => string | undefined,
+): string | undefined {
+	if (environment_token !== undefined && environment_token.length > 0) return environment_token
+	if (npmrc_token !== undefined) return npmrc_token
+
+	return get_fallback_token()
+}
+
 const fix_gh_packages_logic = {
 	parse_gh_scopes,
 	parse_npmrc_auth_token,
@@ -185,6 +196,7 @@ const fix_gh_packages_logic = {
 	needs_tarball_fix,
 	insert_tarball_for_key,
 	patch_lockfile,
+	resolve_token,
 }
 
 export { fix_gh_packages_logic }
