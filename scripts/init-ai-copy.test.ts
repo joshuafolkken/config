@@ -24,6 +24,9 @@ vi.mock('./init-logic', () => ({
 	init_logic: {
 		transform_prompt_paths: vi.fn().mockImplementation((content: string) => content),
 		get_ai_copy_files: vi.fn().mockReturnValue(['CLAUDE.md']),
+		get_ai_copy_file_mappings: vi
+			.fn()
+			.mockReturnValue([{ src: 'templates/workflows/ci.yml', dest: '.github/workflows/ci.yml' }]),
 		get_ai_copy_directories: vi.fn().mockReturnValue(['prompts']),
 	},
 }))
@@ -40,6 +43,7 @@ const { init_ai_copy } = await import('./init-ai-copy')
 const SRC_PATH = '/pkg/CLAUDE.md'
 const DEST_PATH = '/project/CLAUDE.md'
 const RAW_CONTENT = 'raw content'
+const MAPPING_DEST_PATH = '/project/.github/workflows/ci.yml'
 
 describe('init_ai_copy.copy_ai_file — write behavior', () => {
 	it('writes transformed content to destination path', () => {
@@ -67,6 +71,34 @@ describe('init_ai_copy.run_ai_copies — skip behavior', () => {
 		init_ai_copy.run_ai_copies()
 
 		expect(write_file_mock).not.toHaveBeenCalled()
+		vi.restoreAllMocks()
+	})
+})
+
+describe('init_ai_copy.run_ai_copies — file mapping behavior', () => {
+	it('writes mapping destination when it does not exist', () => {
+		exists_sync_mock.mockReturnValue(false)
+		vi.spyOn(console, 'info').mockImplementation(() => {
+			/* suppress */
+		})
+		write_file_mock.mockClear()
+
+		init_ai_copy.run_ai_copies()
+
+		expect(write_file_mock).toHaveBeenCalledWith(MAPPING_DEST_PATH, expect.any(String))
+		vi.restoreAllMocks()
+	})
+
+	it('does not write mapping destination when it already exists', () => {
+		exists_sync_mock.mockReturnValue(true)
+		vi.spyOn(console, 'info').mockImplementation(() => {
+			/* suppress */
+		})
+		write_file_mock.mockClear()
+
+		init_ai_copy.run_ai_copies()
+
+		expect(write_file_mock).not.toHaveBeenCalledWith(MAPPING_DEST_PATH, expect.any(String))
 		vi.restoreAllMocks()
 	})
 })
