@@ -92,11 +92,7 @@ function build_config_file_actions(type: ProjectType): ReadonlyArray<FileAction>
 }
 
 function build_playwright_action(): FileAction {
-	return build_action(
-		'playwright.config.ts',
-		() => init_logic.generate_playwright_config(),
-		(existing) => init_logic.merge_playwright_config(existing),
-	)
+	return { dest: 'playwright.config.ts', create: () => init_logic.generate_playwright_config() }
 }
 
 function build_file_actions(type: ProjectType): ReadonlyArray<FileAction> {
