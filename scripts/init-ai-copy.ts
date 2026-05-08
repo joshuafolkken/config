@@ -11,19 +11,33 @@ function copy_ai_file(source_path: string, destination_path: string): void {
 	writeFileSync(destination_path, init_logic.transform_prompt_paths(content))
 }
 
-function execute_ai_file_copy(filename: string): boolean {
-	const destination_path = path.join(PROJECT_ROOT, filename)
-
+function execute_copy_if_absent(
+	source_path: string,
+	destination_path: string,
+	label: string,
+): boolean {
 	if (existsSync(destination_path)) {
-		console.info(`  ⏭ skipped   ${filename} (already exists — run josh sync to update)`)
+		console.info(`  ⏭ skipped   ${label} (already exists — run josh sync to update)`)
 
 		return true
 	}
 
-	copy_ai_file(package_path(filename), destination_path)
-	console.info(`  ✔ created   ${filename}`)
+	copy_ai_file(source_path, destination_path)
+	console.info(`  ✔ created   ${label}`)
 
 	return false
+}
+
+function execute_ai_file_copy(filename: string): boolean {
+	return execute_copy_if_absent(package_path(filename), path.join(PROJECT_ROOT, filename), filename)
+}
+
+function execute_ai_file_mapping(source: string, destination: string): boolean {
+	return execute_copy_if_absent(
+		package_path(source),
+		path.join(PROJECT_ROOT, destination),
+		destination,
+	)
 }
 
 function execute_ai_directory_copy(directory_name: string): boolean {
@@ -45,10 +59,13 @@ function run_ai_copies(): void {
 	const file_skips = init_logic
 		.get_ai_copy_files()
 		.map((filename) => execute_ai_file_copy(filename))
+	const mapping_skips = init_logic
+		.get_ai_copy_file_mappings()
+		.map(({ src: source, dest: destination }) => execute_ai_file_mapping(source, destination))
 	const directory_skips = init_logic
 		.get_ai_copy_directories()
 		.map((directory_name) => execute_ai_directory_copy(directory_name))
-	const has_skips = [...file_skips, ...directory_skips].some(Boolean)
+	const has_skips = [...file_skips, ...mapping_skips, ...directory_skips].some(Boolean)
 
 	init_sonar.copy_sonar_with_template()
 
