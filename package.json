@@ -1,5 +1,5 @@
 {
-	"version": "0.150.0",
+	"version": "0.151.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -41,6 +41,7 @@
 		"pnpm-workspace.yaml",
 		"tsconfig.sonar.json",
 		"wrangler.jsonc",
+		"playwright.config.ts",
 		"!**/*.test.ts",
 		"!**/*.spec.ts"
 	],

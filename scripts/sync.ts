@@ -104,16 +104,16 @@ function sync_prettier_config(destination_path: string): void {
 function sync_playwright_config(destination_path: string): void {
 	if (!existsSync(destination_path)) return
 
+	const template = init_logic.generate_playwright_config()
 	const existing = readFileSync(destination_path, 'utf8')
-	const merged = init_logic.merge_playwright_config(existing)
 
-	if (merged === existing) {
+	if (template === existing) {
 		console.info('  ✔ unchanged playwright.config.ts')
 
 		return
 	}
 
-	writeFileSync(destination_path, merged)
+	writeFileSync(destination_path, template)
 	console.info('  ✔ synced    playwright.config.ts')
 }
 
