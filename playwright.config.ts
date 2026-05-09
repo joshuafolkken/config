@@ -54,7 +54,7 @@ const env_config: EnvConfig = IS_CI
 
 export default defineConfig({
 	webServer: web_server_config,
-	testDir: 'e2e',
+	testMatch: '**/*.e2e.{ts,js}',
 	fullyParallel: true,
 	...(IS_CI ? { workers: CI_WORKERS } : {}),
 	retries: env_config.retries,

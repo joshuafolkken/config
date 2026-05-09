@@ -1,5 +1,5 @@
 {
-	"version": "0.152.0",
+	"version": "0.153.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
@@ -80,12 +80,12 @@
 		"registry": "https://npm.pkg.github.com"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^2.0.5",
+		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
 		"@ianvs/prettier-plugin-sort-imports": "^4.7.1",
 		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/js-yaml": "^4.0.9",
-		"@types/node": "^25.6.0",
+		"@types/node": "^25.6.2",
 		"cspell": "^10.0.0",
 		"eslint": "^10.3.0",
 		"eslint-config-prettier": "^10.1.8",

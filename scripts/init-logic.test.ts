@@ -81,6 +81,13 @@ describe('generate_playwright_config', () => {
 		expect(result).toContain('DEV_PORT')
 		expect(result).toContain('PREVIEW_PORT')
 	})
+
+	it('uses testMatch for .e2e.ts discovery instead of testDir', () => {
+		const result = init_logic.generate_playwright_config()
+
+		expect(result).toContain("testMatch: '**/*.e2e.{ts,js}'")
+		expect(result).not.toContain("testDir: 'e2e'")
+	})
 })
 
 describe('generate_vite_config', () => {
