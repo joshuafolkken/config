@@ -43,7 +43,7 @@ Req N: ...
 
 When ambiguous, ask the user.
 
-**Output paths:** E2E → `e2e/*.test.ts` / Unit → `src/**/*.spec.ts`
+**Output paths:** E2E → `src/routes/**/*.e2e.ts` / Unit → `src/**/*.spec.ts`
 
 ---
 
@@ -78,7 +78,7 @@ When ambiguous, ask the user.
 
 - Element selection: `page.getByTestId('id')` — add `data-testid` to implementation files
 - Test functions always `async`
-- **Project split:** `playwright.config.ts` defines **`e2e-guest`** (no auth: `e2e/dash-guest.test.ts`, `e2e/demo.test.ts`), then **`e2e-main`** (depends on `e2e-guest`), then **`e2e-leak-check`** (depends on `e2e-main`). Authenticated projects set `storageState` to `e2e/.auth/user.json` when that file exists (path constant: `e2e/saved-auth-storage-path.ts`) — **there is no UI login on every test**; cookies/session are restored from disk.
+- **Project split:** `playwright.config.ts` defines **`e2e-guest`** (no auth: `src/routes/**/dash-guest.e2e.ts`, `src/routes/**/demo.e2e.ts`), then **`e2e-main`** (depends on `e2e-guest`), then **`e2e-leak-check`** (depends on `e2e-main`). Authenticated projects set `storageState` to `src/routes/.auth/user.json` when that file exists — **there is no UI login on every test**; cookies/session are restored from disk.
 - **Workers:** Playwright uses `workers: 1` because authenticated E2E shares one storage state; higher parallelism races on the same DB user.
 - **Timeouts:** Guest/main/leak projects use **per-project test timeouts** in `playwright.config.ts` so switching tabs and dash actions are not cut off by the global default.
 
@@ -86,7 +86,7 @@ When ambiguous, ask the user.
 
 When fixing bugs where tests leave data behind (or similar persistent state):
 
-1. **Add or extend a failing guard** — e.g. `e2e/dash-leak-check.ts` exports `dash_leak_guard.scrub_then_assert_clean` (used by `e2e/dash-leak-check.test.ts`): it scrubs tasks whose titles contain the `E2E_` automation prefix, then asserts none remain. Confirm it **fails** while scrub or per-test teardown is broken (red).
+1. **Add or extend a failing guard** — e.g. `src/routes/dash/dash-leak-check.e2e.ts` exports `dash_leak_guard.scrub_then_assert_clean`: it scrubs tasks whose titles contain the `E2E_` automation prefix, then asserts none remain. Confirm it **fails** while scrub or per-test teardown is broken (red).
 2. **Fix production code or test teardown** — cleanup must be reliable (prefer `data-testid` over locale-specific `aria-label` for automation; avoid swallowing cleanup errors unless explicitly intended).
 3. **Confirm the guard passes** (green) with full `pnpm test:e2e` (or targeted Playwright command above).
 4. **Document** any new invariant in this guide or the relevant E2E helper module.
@@ -124,7 +124,7 @@ When fixing bugs where tests leave data behind (or similar persistent state):
 
 ## 4. Reference Files
 
-**E2E:** `e2e/page.test.ts`, `e2e/praise.test.ts`
+**E2E:** `src/routes/**/page.e2e.ts`, `src/routes/**/praise.e2e.ts`
 **Unit:** `src/lib/data/phrases/phrases.spec.ts`, `src/lib/data/praise-audio.spec.ts`
 **ESLint:** `eslint.config.js`
 
