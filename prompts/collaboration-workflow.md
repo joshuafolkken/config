@@ -212,6 +212,17 @@ pnpm josh followup "<issue-title> #<issue-number>" \
 - ブロッカーが残っていて `--ai-review-ignore-reason` が未指定の場合: `confirmation` Telegram 通知を送り、非ゼロで終了する。指摘を修正してから再実行するか、意図的に無視する理由を渡す
 - `--ai-review-ignore-reason "<reason>"` を渡した場合: 無視理由コメントを PR に投稿したうえで完了通知まで進める（`--coderabbit-ignore-reason` と同じ流れ）
 
+### 設定ファイル更新の確認（`pnpm josh followup` 実行中）
+
+`pnpm josh followup` が CI ステータスチェックの処理を完了した後、`git diff main...HEAD` で PR に `josh sync` が管理・配布するファイル（`playwright.config.ts`、`.github/workflows/ci.yml` など）への変更が含まれていないかを確認する。管理設定ファイルが更新されている場合は、次のコミットの前に停止して `confirmation` Telegram 通知を送る:
+
+```bash
+pnpm josh notify --task-type confirmation --issue-url "<issue-url>" --body=$'CI ステータスチェックが管理設定ファイルの更新を検出\n変更内容を確認してから次のステップに進んでください'
+```
+
+- ユーザーから明示的な確認が得られるまで、次のコミット・修正・マージのいずれも行わない
+- このチェックは AI レビューコメントのスキャンとは独立して実行する — 同一の実行中に両方がトリガーされることもある
+
 ## 運用ルール
 
 - 通知は CI チェック成功後に投稿する
