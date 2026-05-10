@@ -248,7 +248,7 @@ describe('init_logic_json_merge.merge_development_dependencies', () => {
 
 const DEV_ENGINES_KEY = 'devEngines'
 const DEV_ENGINES_VALUE = {
-	packageManager: { name: 'pnpm', version: '11.0.9', onFail: 'error' },
+	packageManager: { name: 'pnpm', version: '>=11.0.0-0', onFail: 'error' },
 }
 
 describe('init_logic_json_merge.merge_development_engines', () => {
@@ -313,17 +313,6 @@ describe('init_logic_json_merge.sort_package_json_keys (devEngines ordering)', (
 		)
 
 		expect(keys.indexOf('engines')).toBeLessThan(keys.indexOf('devEngines'))
-	})
-})
-
-describe('init_logic_json_merge.sort_package_json_keys (packageManager not a managed key)', () => {
-	it('places packageManager after devEngines when both are present', () => {
-		const input = JSON.stringify({ packageManager: 'pnpm@11.0.0', devEngines: {}, name: 'app' })
-		const keys = Object.keys(
-			JSON.parse(init_logic_json_merge.sort_package_json_keys(input)) as object,
-		)
-
-		expect(keys.indexOf('devEngines')).toBeLessThan(keys.indexOf('packageManager'))
 	})
 })
 

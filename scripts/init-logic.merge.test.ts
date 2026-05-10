@@ -232,14 +232,46 @@ describe('merge_sveltekit_package_json size-limit/file', () => {
 	})
 })
 
-describe('merge_package_scripts (strips packageManager)', () => {
-	it('removes packageManager field when applying standard merges', () => {
-		const content = JSON.stringify({ packageManager: 'pnpm@11.0.8', name: 'my-app', scripts: {} })
-		const stripped = init_logic.strip_package_manager_field(content)
-		const result = JSON.parse(stripped) as Record<string, unknown>
+const PACKAGE_MANAGER_VALUE = 'pnpm@10.0.0'
+const PKG_WITH_NAME = '{"name":"my-app"}'
 
-		expect('packageManager' in result).toBe(false)
+describe('merge_package_manager', () => {
+	it('adds packageManager field when missing', () => {
+		const result = JSON.parse(
+			init_logic.merge_package_manager('{}', PACKAGE_MANAGER_VALUE),
+		) as Record<string, string>
+
+		expect(result['packageManager']).toBe(PACKAGE_MANAGER_VALUE)
+	})
+
+	it('returns content unchanged when packageManager already set', () => {
+		const content = `{"packageManager":"${PACKAGE_MANAGER_VALUE}"}`
+
+		expect(init_logic.merge_package_manager(content, 'pnpm@99.0.0')).toBe(content)
+	})
+
+	it('does not overwrite different existing packageManager value', () => {
+		const existing = `{"packageManager":"pnpm@9.0.0"}`
+		const result = JSON.parse(
+			init_logic.merge_package_manager(existing, PACKAGE_MANAGER_VALUE),
+		) as Record<string, string>
+
+		expect(result['packageManager']).toBe('pnpm@9.0.0')
+	})
+
+	it('preserves other fields when adding packageManager', () => {
+		const result = JSON.parse(
+			init_logic.merge_package_manager(PKG_WITH_NAME, PACKAGE_MANAGER_VALUE),
+		) as Record<string, string>
+
 		expect(result['name']).toBe('my-app')
+		expect(result['packageManager']).toBe(PACKAGE_MANAGER_VALUE)
+	})
+
+	it('returns content unchanged when value is empty string', () => {
+		const content = PKG_WITH_NAME
+
+		expect(init_logic.merge_package_manager(content, '')).toBe(content)
 	})
 })
 

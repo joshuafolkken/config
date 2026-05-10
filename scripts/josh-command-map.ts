@@ -57,6 +57,7 @@ const ALIASES: Record<string, string> = {
 	ov: 'overrides',
 	a: 'audit',
 	u: 'latest',
+	lc: 'latest:corepack',
 	lu: 'latest:update',
 	pm: 'prevent-main-commit',
 	cm: 'check-commit-message',

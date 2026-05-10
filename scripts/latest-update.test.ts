@@ -86,25 +86,19 @@ describe('latest_update.main — preinstall sync guard', () => {
 	})
 })
 
-describe('latest_update.main — packageManager strip', () => {
+describe('latest_update.main — packageManager preservation', () => {
 	beforeEach(() => {
 		write_mock.mockReset()
 		spawn_mock.mockReturnValue({ status: 0 })
 	})
 
-	it('writes package.json without packageManager field after successful update', () => {
+	it('does not write package.json to strip packageManager field', () => {
 		latest_update.main()
 
-		const written = write_mock.mock.calls[0]?.[1] as string
+		const stripping_call = write_mock.mock.calls.find(
+			([, content]) => !(content as string).includes('packageManager'),
+		)
 
-		expect(write_mock).toHaveBeenCalled()
-		expect(written).not.toContain('packageManager')
-	})
-
-	it('does not write package.json when update fails', () => {
-		spawn_mock.mockReturnValue({ status: 1 })
-		latest_update.main()
-
-		expect(write_mock).not.toHaveBeenCalled()
+		expect(stripping_call).toBeUndefined()
 	})
 })
