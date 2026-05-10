@@ -1,7 +1,4 @@
 name: CI
-permissions:
-  contents: read
-  packages: read
 
 on:
   push:
@@ -19,6 +16,9 @@ jobs:
     name: Checks
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -73,6 +73,8 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -86,6 +88,8 @@ jobs:
     name: Detect E2E
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    permissions:
+      contents: read
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
     steps:
@@ -106,6 +110,9 @@ jobs:
     needs: e2e-detect
     if: needs.e2e-detect.outputs.enabled == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
       options: --user root
