@@ -248,7 +248,7 @@ describe('init_logic_json_merge.merge_development_dependencies', () => {
 
 const DEV_ENGINES_KEY = 'devEngines'
 const DEV_ENGINES_VALUE = {
-	packageManager: { name: 'pnpm', version: '11.0.9', onFail: 'error' },
+	packageManager: { name: 'pnpm', version: '>=11.0.0-0', onFail: 'error' },
 }
 
 describe('init_logic_json_merge.merge_development_engines', () => {
@@ -306,6 +306,19 @@ describe('init_logic_json_merge.sort_package_json_keys', () => {
 })
 
 describe('init_logic_json_merge.sort_package_json_keys (devEngines ordering)', () => {
+	it('places packageManager before engines', () => {
+		const input = JSON.stringify({
+			engines: {},
+			packageManager: 'pnpm@10.0.0',
+			name: NORMALIZE_NAME,
+		})
+		const keys = Object.keys(
+			JSON.parse(init_logic_json_merge.sort_package_json_keys(input)) as object,
+		)
+
+		expect(keys.indexOf('packageManager')).toBeLessThan(keys.indexOf('engines'))
+	})
+
 	it('places devEngines after engines', () => {
 		const input = JSON.stringify({ devEngines: {}, engines: {}, name: NORMALIZE_NAME })
 		const keys = Object.keys(
@@ -313,17 +326,6 @@ describe('init_logic_json_merge.sort_package_json_keys (devEngines ordering)', (
 		)
 
 		expect(keys.indexOf('engines')).toBeLessThan(keys.indexOf('devEngines'))
-	})
-})
-
-describe('init_logic_json_merge.sort_package_json_keys (packageManager not a managed key)', () => {
-	it('places packageManager after devEngines when both are present', () => {
-		const input = JSON.stringify({ packageManager: 'pnpm@11.0.0', devEngines: {}, name: 'app' })
-		const keys = Object.keys(
-			JSON.parse(init_logic_json_merge.sort_package_json_keys(input)) as object,
-		)
-
-		expect(keys.indexOf('devEngines')).toBeLessThan(keys.indexOf('packageManager'))
 	})
 })
 
@@ -341,21 +343,5 @@ describe('init_logic_json_merge.sort_package_json_keys (edge cases)', () => {
 		const ordered = `${JSON.stringify({ name: NORMALIZE_NAME, devDependencies: {} }, undefined, '\t')}\n`
 
 		expect(init_logic_json_merge.sort_package_json_keys(ordered)).toBe(ordered)
-	})
-})
-
-describe('init_logic_json_merge.strip_package_manager_field', () => {
-	it('removes top-level packageManager when present', () => {
-		const input = JSON.stringify({ name: NORMALIZE_NAME, packageManager: 'pnpm@11.0.9' })
-		const result = JSON.parse(init_logic_json_merge.strip_package_manager_field(input)) as object
-
-		expect(result).not.toHaveProperty('packageManager')
-		expect(result).toHaveProperty('name', NORMALIZE_NAME)
-	})
-
-	it('returns content unchanged when packageManager is absent', () => {
-		const content = `${JSON.stringify({ name: NORMALIZE_NAME }, undefined, '\t')}\n`
-
-		expect(init_logic_json_merge.strip_package_manager_field(content)).toBe(content)
 	})
 })

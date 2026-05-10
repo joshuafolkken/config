@@ -8,7 +8,7 @@ import { init_logic_workspace } from './init-logic-workspace'
 type ProjectType = 'sveltekit' | 'vanilla'
 
 const DEV_ENGINES_VALUE = {
-	packageManager: { name: 'pnpm', version: '11.0.9', onFail: 'error' },
+	packageManager: { name: 'pnpm', version: '>=11.0.0-0', onFail: 'error' },
 }
 
 const NPMRC_LINES: ReadonlyArray<string> = [
