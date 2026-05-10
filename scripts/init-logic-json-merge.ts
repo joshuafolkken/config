@@ -197,6 +197,14 @@ function merge_development_dependencies(
 	return `${JSON.stringify({ ...parsed, devDependencies: { ...existing, ...Object.fromEntries(to_add) } }, undefined, '\t')}\n`
 }
 
+function merge_package_manager(content: string, value: string): string {
+	if (value.length === 0) return content
+	const parsed = json_object_schema.parse(parse_jsonc(content))
+	if ('packageManager' in parsed) return content
+
+	return `${JSON.stringify({ ...parsed, packageManager: value }, undefined, '\t')}\n`
+}
+
 function merge_development_engines(content: string, value: Record<string, unknown>): string {
 	const parsed = json_object_schema.parse(parse_jsonc(content))
 	if ('devEngines' in parsed) return content
@@ -215,26 +223,6 @@ function merge_package_script_suffix(content: string, key: string, cmd: string):
 	const updated_value = existing.trim().length === 0 ? cmd : `${existing} && ${cmd}`
 
 	return `${JSON.stringify({ ...parsed, scripts: { ...scripts, [key]: updated_value } }, undefined, '\t')}\n`
-}
-
-function merge_package_manager(content: string, value: string): string {
-	if (value.length === 0) return content
-	const parsed = json_object_schema.parse(parse_jsonc(content))
-	if ('packageManager' in parsed) return content
-
-	return `${JSON.stringify({ ...parsed, packageManager: value }, undefined, '\t')}\n`
-}
-
-const PACKAGE_MANAGER_KEY = 'packageManager'
-
-function strip_package_manager_field(content: string): string {
-	const parsed = json_object_schema.parse(parse_jsonc(content))
-	if (!(PACKAGE_MANAGER_KEY in parsed)) return content
-	const result = Object.fromEntries(
-		Object.entries(parsed).filter(([k]) => k !== PACKAGE_MANAGER_KEY),
-	)
-
-	return `${JSON.stringify(result, undefined, '\t')}\n`
 }
 
 function sort_package_json_keys(content: string): string {
@@ -262,7 +250,6 @@ const init_logic_json_merge = {
 	merge_package_manager,
 	merge_development_engines,
 	sort_package_json_keys,
-	strip_package_manager_field,
 }
 
 export { init_logic_json_merge }
