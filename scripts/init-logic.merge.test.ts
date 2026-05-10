@@ -232,6 +232,17 @@ describe('merge_sveltekit_package_json size-limit/file', () => {
 	})
 })
 
+describe('merge_package_scripts (strips packageManager)', () => {
+	it('removes packageManager field when applying standard merges', () => {
+		const content = JSON.stringify({ packageManager: 'pnpm@11.0.8', name: 'my-app', scripts: {} })
+		const stripped = init_logic.strip_package_manager_field(content)
+		const result = JSON.parse(stripped) as Record<string, unknown>
+
+		expect('packageManager' in result).toBe(false)
+		expect(result['name']).toBe('my-app')
+	})
+})
+
 const VISUALIZER_ANCHOR = '// @kit:visualizer-plugins'
 const STANDARD_VITE_CONFIG = `import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vite'
