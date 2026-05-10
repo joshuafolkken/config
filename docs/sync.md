@@ -23,7 +23,7 @@ SECURITY.md         tsconfig.sonar.json wrangler.jsonc
 .github/workflows/ci.yml
 .github/workflows/auto-tag.yml
 .github/workflows/production.yml
-.github/workflows/sonar-cube.yml
+.github/workflows/sonar-qube.yml
 .github/pull_request_template.md
 .github/release.yml
 ```
