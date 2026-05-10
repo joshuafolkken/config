@@ -2,9 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const spawn_mock = vi.hoisted(() => vi.fn().mockReturnValue({ status: 0 }))
 const sync_mock = vi.hoisted(() => vi.fn())
+const write_mock = vi.hoisted(() => vi.fn())
 
 vi.mock('node:child_process', () => ({ spawnSync: spawn_mock }))
-vi.mock('node:fs', () => ({ readFileSync: vi.fn().mockReturnValue('{"pnpm":{"overrides":{}}}') }))
+vi.mock('node:fs', () => ({
+	readFileSync: vi.fn().mockReturnValue('{"pnpm":{"overrides":{}},"packageManager":"pnpm@11.0.9"}'),
+	writeFileSync: write_mock,
+}))
 vi.mock('./preinstall-version-update', () => ({
 	preinstall_version_update: { sync: sync_mock },
 }))
@@ -79,5 +83,28 @@ describe('latest_update.main — preinstall sync guard', () => {
 		latest_update.main()
 
 		expect(sync_mock).not.toHaveBeenCalled()
+	})
+})
+
+describe('latest_update.main — packageManager strip', () => {
+	beforeEach(() => {
+		write_mock.mockReset()
+		spawn_mock.mockReturnValue({ status: 0 })
+	})
+
+	it('writes package.json without packageManager field after successful update', () => {
+		latest_update.main()
+
+		const written = write_mock.mock.calls[0]?.[1] as string
+
+		expect(write_mock).toHaveBeenCalled()
+		expect(written).not.toContain('packageManager')
+	})
+
+	it('does not write package.json when update fails', () => {
+		spawn_mock.mockReturnValue({ status: 1 })
+		latest_update.main()
+
+		expect(write_mock).not.toHaveBeenCalled()
 	})
 })

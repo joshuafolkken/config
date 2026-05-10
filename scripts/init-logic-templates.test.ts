@@ -81,3 +81,29 @@ describe('init_logic_templates.generate_vite_config', () => {
 		expect(init_logic_templates.generate_vite_config()).toContain('rollup-plugin-visualizer')
 	})
 })
+
+const CI_YML_CONTENT = readFileSync(
+	path.join(PACKAGE_DIR, 'templates', 'workflows', 'ci.yml'),
+	'utf8',
+)
+
+describe('ci.yml template content', () => {
+	it('does not have a separate build step before E2E (build runs inside webServer)', () => {
+		expect(CI_YML_CONTENT).not.toContain('E2E_CLEANUP_ENABLED')
+	})
+
+	it('does not have a dedicated Build application step in the e2e job', () => {
+		expect(CI_YML_CONTENT).not.toContain('Build application')
+	})
+})
+
+const SVELTEKIT_YML_CONTENT = readFileSync(
+	path.join(PACKAGE_DIR, 'lefthook', 'sveltekit.yml'),
+	'utf8',
+)
+
+describe('lefthook sveltekit.yml content', () => {
+	it('sets CI env var in pre-push to trigger playwright CI path', () => {
+		expect(SVELTEKIT_YML_CONTENT).toContain("CI: '1'")
+	})
+})

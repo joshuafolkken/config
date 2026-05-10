@@ -216,6 +216,18 @@ function merge_package_script_suffix(content: string, key: string, cmd: string):
 	return `${JSON.stringify({ ...parsed, scripts: { ...scripts, [key]: updated_value } }, undefined, '\t')}\n`
 }
 
+const PACKAGE_MANAGER_KEY = 'packageManager'
+
+function strip_package_manager_field(content: string): string {
+	const parsed = json_object_schema.parse(parse_jsonc(content))
+	if (!(PACKAGE_MANAGER_KEY in parsed)) return content
+	const result = Object.fromEntries(
+		Object.entries(parsed).filter(([k]) => k !== PACKAGE_MANAGER_KEY),
+	)
+
+	return `${JSON.stringify(result, undefined, '\t')}\n`
+}
+
 function sort_package_json_keys(content: string): string {
 	const parsed = json_object_schema.parse(parse_jsonc(content))
 	const all_keys = Object.keys(parsed)
@@ -240,6 +252,7 @@ const init_logic_json_merge = {
 	merge_development_dependencies,
 	merge_development_engines,
 	sort_package_json_keys,
+	strip_package_manager_field,
 }
 
 export { init_logic_json_merge }
