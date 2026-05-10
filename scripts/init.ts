@@ -8,7 +8,7 @@ import { init_ai_copy } from './init-ai-copy'
 import { init_logic, type ProjectType } from './init-logic'
 import { package_path, PROJECT_ROOT } from './init-paths'
 import { install_josh_bin_section } from './install-bin'
-import { string_array_schema, vscode_settings_schema, with_package_manager_schema } from './schemas'
+import { string_array_schema, vscode_settings_schema } from './schemas'
 import { sync } from './sync'
 
 const PACKAGE_JSON = 'package.json'
@@ -212,28 +212,16 @@ async function resolve_project_type(): Promise<ProjectType> {
 	return await prompt_project_type()
 }
 
-function get_kit_package_manager(): string | undefined {
-	const { packageManager: package_manager } = with_package_manager_schema.parse(
-		read_package_json(PACKAGE_JSON),
-	)
-
-	return package_manager !== undefined && package_manager.length > 0 ? package_manager : undefined
-}
-
-function get_kit_development_engines(): Record<string, unknown> {
-	return init_logic.get_development_engines_value()
-}
-
 function apply_package_json_merges(content: string, type: ProjectType): string {
 	const merged =
 		type === 'sveltekit'
 			? init_logic.merge_sveltekit_package_json(content)
 			: init_logic.merge_package_scripts(content, init_logic.get_suggested_scripts(type))
 	const with_fix = init_logic.merge_postinstall_fix_cmd(merged)
-	const kit_pm = get_kit_package_manager()
-	const with_pm =
-		kit_pm === undefined ? with_fix : init_logic.merge_package_manager(with_fix, kit_pm)
-	const with_de = init_logic.merge_development_engines(with_pm, get_kit_development_engines())
+	const with_de = init_logic.merge_development_engines(
+		with_fix,
+		init_logic.get_development_engines_value(),
+	)
 
 	return init_logic.sort_package_json_keys(with_de)
 }
