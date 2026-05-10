@@ -45,7 +45,7 @@ const EXPECTED_COMMANDS_BY_CATEGORY = new Map<string, ReadonlyArray<string>>([
 	['Project', ['init', 'sync', 'install']],
 	['Workflow', ['git', 'pr', 'followup', 'notify', 'main:sync', 'main:merge']],
 	['Versioning', ['bump', 'version']],
-	['Maintenance', ['overrides', 'audit', 'latest', 'latest:update']],
+	['Maintenance', ['overrides', 'audit', 'latest', 'latest:corepack', 'latest:update']],
 	[
 		'Git hooks',
 		[
@@ -299,9 +299,8 @@ describe('COMMAND_MAP shell commands', () => {
 		expect(shell).toContain('install')
 	})
 
-	it('latest uses the same script as latest:update', () => {
-		expect(COMMAND_MAP['latest']?.script).toBe(COMMAND_MAP['latest:update']?.script)
-		expect(COMMAND_MAP['latest']?.shell).toBeUndefined()
+	it('latest uses sh -c for chaining', () => {
+		expect(COMMAND_MAP['latest']?.shell?.[0]).toBe('sh')
 	})
 
 	it('test:e2e delegates to pnpm exec playwright test', () => {

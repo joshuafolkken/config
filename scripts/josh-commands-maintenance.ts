@@ -1,8 +1,5 @@
 import type { CommandEntry } from './josh-command-types'
 
-const LATEST_UPDATE_SCRIPT = 'scripts/latest-update.ts'
-const LATEST_UPDATE_DESCRIPTION = 'Update all dependencies to latest'
-
 /* eslint-disable @typescript-eslint/naming-convention */
 const MAINTENANCE_COMMANDS: Record<string, CommandEntry> = {
 	overrides: {
@@ -16,13 +13,22 @@ const MAINTENANCE_COMMANDS: Record<string, CommandEntry> = {
 		category: 'Maintenance',
 	},
 	latest: {
-		script: LATEST_UPDATE_SCRIPT,
-		description: LATEST_UPDATE_DESCRIPTION,
+		shell: [
+			'sh',
+			'-c',
+			'export NODE_AUTH_TOKEN=$(gh auth token) && corepack use pnpm@latest && pnpm josh latest:update && josh audit',
+		],
+		description: 'Update pnpm, dependencies, and run security audit',
+		category: 'Maintenance',
+	},
+	'latest:corepack': {
+		shell: ['corepack', 'use', 'pnpm@latest'],
+		description: 'Update pnpm via corepack',
 		category: 'Maintenance',
 	},
 	'latest:update': {
-		script: LATEST_UPDATE_SCRIPT,
-		description: LATEST_UPDATE_DESCRIPTION,
+		script: 'scripts/latest-update.ts',
+		description: 'Update all dependencies to latest',
 		category: 'Maintenance',
 	},
 }
