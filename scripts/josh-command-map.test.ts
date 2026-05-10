@@ -147,12 +147,12 @@ describe('ALIASES — all resolve to valid COMMAND_MAP keys', () => {
 	})
 })
 
-describe('COMMAND_MAP — latest command authentication', () => {
-	it('latest command shell exports NODE_AUTH_TOKEN from gh auth token', () => {
+describe('COMMAND_MAP — latest command', () => {
+	it('latest command uses script instead of shell', () => {
 		const entry = get_command('latest')
-		const shell_string = entry?.shell?.join(' ') ?? ''
 
-		expect(shell_string).toContain('export NODE_AUTH_TOKEN=$(gh auth token)')
+		expect(entry?.script).toBeDefined()
+		expect(entry?.shell).toBeUndefined()
 	})
 })
 
