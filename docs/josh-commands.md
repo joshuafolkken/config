@@ -210,12 +210,11 @@ pnpm josh audit
 
 ### `josh latest`
 
-Update pnpm via corepack, update all dependencies to latest, and run a security audit.
+Update all dependencies to latest. Alias for `josh latest:update`.
 
 ```bash
-pnpm josh latest            # full update (corepack + update + audit)
-pnpm josh latest:corepack   # update pnpm only
-pnpm josh latest:update     # update dependencies only
+pnpm josh latest            # update dependencies to latest
+pnpm josh latest:update     # same as above
 ```
 
 ---
