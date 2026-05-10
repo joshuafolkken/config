@@ -213,10 +213,11 @@ async function resolve_project_type(): Promise<ProjectType> {
 }
 
 function apply_package_json_merges(content: string, type: ProjectType): string {
+	const stripped = init_logic.strip_package_manager_field(content)
 	const merged =
 		type === 'sveltekit'
-			? init_logic.merge_sveltekit_package_json(content)
-			: init_logic.merge_package_scripts(content, init_logic.get_suggested_scripts(type))
+			? init_logic.merge_sveltekit_package_json(stripped)
+			: init_logic.merge_package_scripts(stripped, init_logic.get_suggested_scripts(type))
 	const with_fix = init_logic.merge_postinstall_fix_cmd(merged)
 	const with_de = init_logic.merge_development_engines(
 		with_fix,
