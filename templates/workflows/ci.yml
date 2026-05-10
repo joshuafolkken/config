@@ -1,7 +1,4 @@
 name: CI
-permissions:
-  contents: read
-  packages: read
 
 on:
   push:
@@ -18,6 +15,9 @@ jobs:
   checks:
     name: Checks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     # Playwright system dependencies and Chromium are pre-installed in this image,
     # eliminating the slow `playwright install-deps` step. Keep the image tag in
     # sync with @playwright/test in package.json whenever Playwright is upgraded.
@@ -88,6 +88,8 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -101,6 +103,8 @@ jobs:
     name: Detect E2E
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    permissions:
+      contents: read
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
     steps:
@@ -121,6 +125,9 @@ jobs:
     needs: e2e-detect
     if: needs.e2e-detect.outputs.enabled == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     # Playwright system dependencies and Chromium are pre-installed in this image.
     # Keep the image tag in sync with @playwright/test in package.json whenever
     # Playwright is upgraded.
