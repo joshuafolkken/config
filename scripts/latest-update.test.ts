@@ -95,9 +95,11 @@ describe('latest_update.main — packageManager preservation', () => {
 	it('does not write package.json to strip packageManager field', () => {
 		latest_update.main()
 
-		const stripping_call = write_mock.mock.calls.find(
-			([, content]) => !(content as string).includes('packageManager'),
-		)
+		const stripping_call = write_mock.mock.calls.find(([, content]) => {
+			if (typeof content !== 'string') return false
+
+			return !content.includes('packageManager')
+		})
 
 		expect(stripping_call).toBeUndefined()
 	})

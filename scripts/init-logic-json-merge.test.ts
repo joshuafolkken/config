@@ -306,6 +306,19 @@ describe('init_logic_json_merge.sort_package_json_keys', () => {
 })
 
 describe('init_logic_json_merge.sort_package_json_keys (devEngines ordering)', () => {
+	it('places packageManager before engines', () => {
+		const input = JSON.stringify({
+			engines: {},
+			packageManager: 'pnpm@10.0.0',
+			name: NORMALIZE_NAME,
+		})
+		const keys = Object.keys(
+			JSON.parse(init_logic_json_merge.sort_package_json_keys(input)) as object,
+		)
+
+		expect(keys.indexOf('packageManager')).toBeLessThan(keys.indexOf('engines'))
+	})
+
 	it('places devEngines after engines', () => {
 		const input = JSON.stringify({ devEngines: {}, engines: {}, name: NORMALIZE_NAME })
 		const keys = Object.keys(
