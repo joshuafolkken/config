@@ -5,8 +5,9 @@
  * Usage: tsx scripts/latest-update.ts
  */
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { init_logic_json_merge } from './init-logic-json-merge'
 import { overrides_check } from './overrides/overrides-logic'
 import { preinstall_version_update } from './preinstall-version-update'
 
@@ -31,6 +32,12 @@ function run_update(update_arguments: Array<string> | undefined): number {
 	return run(update_arguments)
 }
 
+function strip_package_manager(path: string): void {
+	const content = readFileSync(path, 'utf8')
+	const stripped = init_logic_json_merge.strip_package_manager_field(content)
+	if (stripped !== content) writeFileSync(path, stripped, 'utf8')
+}
+
 function main(): void {
 	const package_json_content = readFileSync(PACKAGE_JSON_PATH, 'utf8')
 	const overrides = overrides_check.read_overrides_from_package(package_json_content)
@@ -45,6 +52,7 @@ function main(): void {
 
 	if (update_status === 0) {
 		preinstall_version_update.sync(PACKAGE_JSON_PATH)
+		strip_package_manager(PACKAGE_JSON_PATH)
 	}
 }
 

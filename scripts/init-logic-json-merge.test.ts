@@ -343,3 +343,19 @@ describe('init_logic_json_merge.sort_package_json_keys (edge cases)', () => {
 		expect(init_logic_json_merge.sort_package_json_keys(ordered)).toBe(ordered)
 	})
 })
+
+describe('init_logic_json_merge.strip_package_manager_field', () => {
+	it('removes top-level packageManager when present', () => {
+		const input = JSON.stringify({ name: NORMALIZE_NAME, packageManager: 'pnpm@11.0.9' })
+		const result = JSON.parse(init_logic_json_merge.strip_package_manager_field(input)) as object
+
+		expect(result).not.toHaveProperty('packageManager')
+		expect(result).toHaveProperty('name', NORMALIZE_NAME)
+	})
+
+	it('returns content unchanged when packageManager is absent', () => {
+		const content = `${JSON.stringify({ name: NORMALIZE_NAME }, undefined, '\t')}\n`
+
+		expect(init_logic_json_merge.strip_package_manager_field(content)).toBe(content)
+	})
+})

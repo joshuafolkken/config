@@ -88,6 +88,16 @@ describe('generate_playwright_config', () => {
 		expect(result).toContain("testMatch: '**/*.e2e.{ts,js}'")
 		expect(result).not.toContain("testDir: 'e2e'")
 	})
+
+	it('uses 120_000 as CI_TIMEOUT to cover build time inside webServer', () => {
+		expect(init_logic.generate_playwright_config()).toContain('CI_TIMEOUT = 120_000')
+	})
+
+	it('runs build before preview in CI webServer command', () => {
+		expect(init_logic.generate_playwright_config()).toContain(
+			"command: 'pnpm run build && pnpm run preview'",
+		)
+	})
 })
 
 describe('generate_vite_config', () => {
