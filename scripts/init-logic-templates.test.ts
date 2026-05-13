@@ -95,6 +95,11 @@ describe('ci.yml template content', () => {
 	it('does not have a dedicated Build application step in the e2e job', () => {
 		expect(CI_YML_CONTENT).not.toContain('Build application')
 	})
+
+	it('includes notify-auto-tag job that dispatches ci-passed-on-main event', () => {
+		expect(CI_YML_CONTENT).toContain('notify-auto-tag')
+		expect(CI_YML_CONTENT).toContain('ci-passed-on-main')
+	})
 })
 
 const SVELTEKIT_YML_CONTENT = readFileSync(
