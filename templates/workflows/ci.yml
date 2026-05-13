@@ -12,17 +12,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  playwright-image:
+    name: Resolve Playwright image
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Resolve image
+        id: resolve
+        run: |
+          version=$(node -p "require('./package.json').devDependencies['@playwright/test']" | tr -d '^~')
+          echo "image=mcr.microsoft.com/playwright:v${version}-noble" >> $GITHUB_OUTPUT
+
   checks:
     name: Checks
+    needs: playwright-image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
-    # Playwright system dependencies and Chromium are pre-installed in this image,
-    # eliminating the slow `playwright install-deps` step. Keep the image tag in
-    # sync with @playwright/test in package.json whenever Playwright is upgraded.
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: ${{ needs.playwright-image.outputs.image }}
       options: --user root
     timeout-minutes: 8
     steps:
@@ -120,17 +136,14 @@ jobs:
 
   e2e:
     name: E2E
-    needs: e2e-detect
+    needs: [playwright-image, e2e-detect]
     if: needs.e2e-detect.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
-    # Playwright system dependencies and Chromium are pre-installed in this image.
-    # Keep the image tag in sync with @playwright/test in package.json whenever
-    # Playwright is upgraded.
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: ${{ needs.playwright-image.outputs.image }}
       options: --user root
     timeout-minutes: 10
     # Playwright preview は localhost:4173。ワークフロー共通の BETTER_AUTH_URL（本番）を

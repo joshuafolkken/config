@@ -100,6 +100,19 @@ describe('ci.yml template content', () => {
 		expect(CI_YML_CONTENT).toContain('notify-auto-tag')
 		expect(CI_YML_CONTENT).toContain('ci-passed-on-main')
 	})
+
+	it('includes playwright-image job that resolves the image dynamically', () => {
+		expect(CI_YML_CONTENT).toContain('playwright-image:')
+		expect(CI_YML_CONTENT).toContain('steps.resolve.outputs.image')
+	})
+
+	it('has no hardcoded playwright docker image tag', () => {
+		expect(CI_YML_CONTENT).not.toMatch(/mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble/u)
+	})
+
+	it('checks and e2e jobs reference the dynamic playwright image output', () => {
+		expect(CI_YML_CONTENT).toContain('needs.playwright-image.outputs.image')
+	})
 })
 
 const SVELTEKIT_YML_CONTENT = readFileSync(
