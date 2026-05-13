@@ -12,6 +12,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  playwright-image:
+    name: Resolve Playwright image
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      image: ${{ steps.resolve.outputs.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Resolve image
+        id: resolve
+        run: |
+          version=$(grep -m1 "^'@playwright/test@" pnpm-lock.yaml | sed "s/'@playwright\/test@//" | sed "s/':.*//" )
+          echo "image=mcr.microsoft.com/playwright:v${version}-noble" >> $GITHUB_OUTPUT
+
   checks:
     name: Checks
     runs-on: ubuntu-latest
@@ -105,19 +123,18 @@ jobs:
 
   e2e:
     name: E2E
-    needs: e2e-detect
+    needs: [playwright-image, e2e-detect]
     if: needs.e2e-detect.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: ${{ needs.playwright-image.outputs.image }}
       options: --user root
     timeout-minutes: 10
-    # Playwright preview は localhost:4173。ワークフロー共通の BETTER_AUTH_URL（本番）を
-    # 引き継ぐと Better Auth が origin を拒否する（CI E2E では本番 URL は使わない）。
-    # ホスト/ポートは playwright.config.ts の PREVIEW_PORT（4173）と一致させること。
+    # Playwright preview runs on localhost:4173. Using the production BETTER_AUTH_URL would
+    # cause Better Auth to reject the origin. Port must match PREVIEW_PORT in playwright.config.ts.
     env:
       BETTER_AUTH_URL: http://localhost:4173
     steps:
