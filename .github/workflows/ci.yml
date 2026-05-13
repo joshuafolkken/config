@@ -27,7 +27,7 @@ jobs:
       - name: Resolve image
         id: resolve
         run: |
-          version=$(grep -m1 "^'@playwright/test@" pnpm-lock.yaml | sed "s/'@playwright\/test@//" | sed "s/':.*//" )
+          version=$(grep -m1 "'@playwright/test@" pnpm-lock.yaml | sed "s/.*'@playwright\/test@//" | sed "s/':.*//")
           echo "image=mcr.microsoft.com/playwright:v${version}-noble" >> $GITHUB_OUTPUT
 
   checks:
