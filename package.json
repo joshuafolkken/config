@@ -1,9 +1,9 @@
 {
-	"version": "0.166.0",
+	"version": "0.167.0",
 	"name": "@joshuafolkken/kit",
 	"type": "module",
 	"license": "MIT",
-	"packageManager": "pnpm@11.0.9+sha512.34ce82e6780233cf9cad8685029a8f81d2e06196c5a9bad98879f7424940c6817c4e4524fb7d38b8553ceed48b9758b8ebaf1abd3600c232c4c8cf7366086f38",
+	"packageManager": "pnpm@11.1.0+sha512.0c44e842e5686b2c061a81adda8b2258bd8818e9704b2cf2c63d56b931a7b2e910092e085027003b96ca3911ab56a07f6df5abaed2be9925034cdd686a535b14",
 	"engines": {
 		"node": ">=22.19.0"
 	},
@@ -85,7 +85,7 @@
 		"@ianvs/prettier-plugin-sort-imports": "^4.7.1",
 		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/js-yaml": "^4.0.9",
-		"@types/node": "^25.6.2",
+		"@types/node": "^25.7.0",
 		"cspell": "^10.0.0",
 		"eslint": "^10.3.0",
 		"eslint-config-prettier": "^10.1.8",
@@ -98,11 +98,11 @@
 		"globals": "^17.6.0",
 		"lefthook": "^2.1.6",
 		"prettier": "^3.8.3",
-		"prettier-plugin-svelte": "^3.5.1",
+		"prettier-plugin-svelte": "^3.5.2",
 		"prettier-plugin-tailwindcss": "^0.8.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.59.2",
-		"vitest": "^4.1.5"
+		"vitest": "^4.1.6"
 	},
 	"dependencies": {
 		"js-yaml": "^4.1.1",
