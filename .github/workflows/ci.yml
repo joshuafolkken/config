@@ -178,6 +178,7 @@ jobs:
       github.ref == 'refs/heads/main' &&
       needs.checks.result == 'success' &&
       needs.security.result == 'success' &&
+      needs.e2e-detect.result == 'success' &&
       (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
