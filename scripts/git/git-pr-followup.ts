@@ -2,6 +2,7 @@ import { git_gh_command } from './git-gh-command'
 import { git_notify, type GitNotifyConfig } from './git-notify'
 import { git_pr_ai_review, type TelegramContext } from './git-pr-ai-review'
 import { git_pr_checks } from './git-pr-checks'
+import { git_pr_review } from './git-pr-review'
 import { pull_comment_schema } from './schemas'
 import { telegram_notify, type TelegramSendInput, type TelegramTaskType } from './telegram-notify'
 
@@ -59,6 +60,7 @@ interface FollowupInput {
 	notify_config: GitNotifyConfig | undefined
 	coderabbit_ignore_reason: string | undefined
 	ai_review_ignore_reason: string | undefined
+	review_ignore_reason: string | undefined
 	is_skip_watch: boolean
 	should_merge: boolean
 }
@@ -236,6 +238,11 @@ async function notify_completion(context: TelegramContext): Promise<void> {
 
 async function run_review_checks(input: FollowupInput, context: TelegramContext): Promise<void> {
 	await run_checks({ branch_name: input.branch_name, is_skip_watch: input.is_skip_watch })
+	await git_pr_review.handle_pre_merge_review({
+		branch_name: input.branch_name,
+		ignore_reason: input.review_ignore_reason,
+		context,
+	})
 	await handle_coderabbit_findings({
 		branch_name: input.branch_name,
 		ignore_reason: input.coderabbit_ignore_reason,
