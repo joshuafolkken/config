@@ -48,11 +48,15 @@ function load_rubric(): string {
 }
 
 function detect_claude_available(): boolean {
-	/* eslint-disable sonarjs/no-os-command-from-path -- which is a well-known CLI utility */
-	const result = spawnSync('which', ['claude'], { encoding: 'utf8', shell: false })
-	/* eslint-enable sonarjs/no-os-command-from-path */
+	try {
+		/* eslint-disable sonarjs/no-os-command-from-path -- which is a well-known CLI utility */
+		const result = spawnSync('which', ['claude'], { encoding: 'utf8', shell: false })
+		/* eslint-enable sonarjs/no-os-command-from-path */
 
-	return result.status === EXIT_OK && result.stdout.trim().length > EMPTY_STRING_LENGTH
+		return result.status === EXIT_OK && result.stdout.trim().length > EMPTY_STRING_LENGTH
+	} catch {
+		return false
+	}
 }
 
 function build_review_prompt(rubric: string, diff: string): string {
