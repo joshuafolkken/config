@@ -141,6 +141,8 @@ pnpm josh pr
 
 `fullrun` フローでは、コミット後かつ `pnpm josh followup --merge` 実行前に `/review` スキルを実行する。高・中優先度の指摘が見つかった場合は修正を行い、クリーンになるまで再度 `/review` を実行してから次のステップへ進む。
 
+**`/review` → `followup --merge` Chain rule**: `/review` の出力（"Approve for merge" 等の Markdown レビュー本文）は turn boundary ではなく中間ステップ。**指摘が高・中ともになければ、同じターン内で即座に `pnpm josh followup "<title> #<N>" --merge --notify-message "..."` を呼び出す**（ユーザーの追加入力を待たない）。ワークフローが終わるのは (a) PR がマージされて Telegram 完了通知が届いたとき、または (b) ユーザー判断が必要な真のブロッカー（自動検証できない AI レビュー指摘、`josh sync` 管理対象の設定ファイル変更ゲート、ユーザー判断を要する CI 失敗）が出たとき。アンチパターン: `/review` の "Approve for merge" を提示してユーザーに引き継いで停止すること — ユーザーは `fullrun` を呼んだのであり、マージまで含めて承認している。モデル（Claude / Gemini / Cursor）・アカウント・実行環境を跨いでこのルールが保たれる必要がある。
+
 ## Step 5: PR結果確認 + 完了通知（別スクリプト）
 
 `pnpm josh git` の後に、別スクリプト `pnpm josh followup` を実行する。
@@ -248,6 +250,7 @@ pnpm josh followup "<title> #<N>" --merge --notify-message "..."
 
 - **AI レビュー指摘は自動チェック**: `pnpm josh followup --merge` は CI グリーン後に AI レビュアーの指摘をスキャンする。ブロッカーが残っていれば `confirmation` 通知を送って非ゼロで終了する（マージされない）。指摘を修正して `pnpm josh followup --merge` を再実行する。**CI がオールグリーンでも、未対応の AI レビュー指摘があるならマージしない**
 - **CodeRabbit のレート制限はマージを止めない**: CodeRabbit のコメントが rate limit 警告のみ（本文に `rate limited by coderabbit.ai` または `Rate limit exceeded` を含む）で実体のあるレビューが無い場合、または最新 commit に対して CodeRabbit のコメントが一切無い場合は、**レート制限切れとみなしてマージへ進む**
+- **CodeRabbit 指摘は反射的にバイパスしない**: CodeRabbit が実体ある指摘を出した場合、まず指摘内容が正しいかを検証する。例: `pnpm/action-setup@<sha> # v6.0.8` のような GitHub Actions の SHA pin について「タグと一致しない」と指摘された場合、CodeRabbit は `gh api repos/<owner>/<repo>/git/ref/tags/v6.0.8` を実行している可能性が高い。これは **annotated tag-object SHA** を返すが、GitHub Actions の pin に使うのは **commit SHA**。`gh api repos/<owner>/<repo>/commits/<tag> --jq '.sha'` で確認し、これが pin と一致するなら偽陽性。その場合は検証根拠を `--coderabbit-ignore-reason "<検証コマンドと出力>"` に明記してバイパスする
 - **マージ戦略**: 内部で `gh pr merge <branch> --merge` を実行する。既定は `--merge`（merge commit）。リポジトリが `allow_squash_merge` / `allow_rebase_merge` のみを許可している場合はそれに合わせる（`gh api repos/<owner>/<repo> --jq '{allow_merge_commit, allow_squash_merge, allow_rebase_merge}'` で確認）
 - **ブランチ削除**: `--delete-branch` は既定で付けない。ブランチ削除は別途ユーザーが指示する
 - **失敗時の対応**: branch protection 未達・コンフリクトなどでマージが拒否された場合は、原因を報告して停止する。フラグを変えて再試行したり保護をバイパスしたりしない
