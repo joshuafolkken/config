@@ -13,7 +13,7 @@ interface ParsedReview {
 	is_empty: boolean
 }
 
-const FINDING_LINE_PATTERN = /\((high|medium|low)\)/iu
+const FINDING_LINE_PATTERN = /^\s*-\s+`[^`]+`\s+\((high|medium|low)\)/iu
 const EMPTY_COUNT = 0
 
 function parse_severity(raw: string): Severity {

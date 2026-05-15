@@ -47,6 +47,12 @@ describe('parse_review_markdown — severity counting', () => {
 
 		expect(parse_review_markdown(markdown).high_count).toBe(1)
 	})
+
+	it('counts a finding indented under a nested list', () => {
+		const markdown = '   - `src/foo.ts:1` (high) — indented finding'
+
+		expect(parse_review_markdown(markdown).high_count).toBe(1)
+	})
 })
 
 describe('parse_review_markdown — non-finding lines', () => {
@@ -63,6 +69,29 @@ describe('parse_review_markdown — non-finding lines', () => {
 
 		expect(result.high_count).toBe(0)
 		expect(result.findings).toHaveLength(0)
+	})
+
+	it('does not count severity tags in prose (no file-path bullet prefix)', () => {
+		const markdown = 'The pattern matches `(high)` anywhere on any line — see confidence floor.'
+
+		expect(parse_review_markdown(markdown).high_count).toBe(0)
+	})
+
+	it('does not count severity tags inside summary paragraphs', () => {
+		const markdown = [
+			'### Summary',
+			'',
+			'- 0 high / 1 medium / 0 low',
+			'Found 1 (medium) finding in the parser.',
+		].join('\n')
+
+		expect(parse_review_markdown(markdown).medium_count).toBe(0)
+	})
+
+	it('does not count severity tags in plain bullet without file-path backticks', () => {
+		const markdown = '- The regex matches (high) without requiring a file citation.'
+
+		expect(parse_review_markdown(markdown).high_count).toBe(0)
 	})
 })
 
