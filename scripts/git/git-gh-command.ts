@@ -230,14 +230,6 @@ async function pr_get_comments(branch_name: string): Promise<string> {
 	}
 }
 
-async function pr_diff(branch_name: string): Promise<string> {
-	try {
-		return await git_gh_exec.exec_gh_command(['pr', 'diff', branch_name])
-	} catch {
-		return ''
-	}
-}
-
 async function pr_comment(branch_name: string, body: string): Promise<string> {
 	return await git_gh_exec.exec_gh_command_with_stdin({
 		args: ['pr', 'comment', branch_name, BODY_FILE_FLAG, BODY_FROM_STDIN],
@@ -297,7 +289,6 @@ const git_gh_command = {
 	repo_get_name_with_owner,
 	pr_get_review_comments,
 	pr_get_comments,
-	pr_diff,
 	pr_comment,
 	pr_merge,
 	issue_comment,
