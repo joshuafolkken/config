@@ -139,7 +139,7 @@ pnpm josh pr
 
 **Do not** run `gh pr create` directly — it bypasses `build_body` which generates `closes #N`, causing the Issue to remain open after merge.
 
-`fullrun` フローでは、コミット後に手動で `/review` スキルを呼び出す必要はない。`pnpm josh followup --merge` が内部で `claude -p` を起動して `prompts/review.md` に従ったレビューを実行し、高・中優先度の指摘があれば PR コメント／非ゼロ終了で自動的に止まる（詳細は下記「事前マージレビュー」を参照）。レビューがクリーンなら自動的にマージへ進む。
+`fullrun` フローでは、コミット後かつ `pnpm josh followup --merge` 実行前に `/review` スキルを実行する。高・中優先度の指摘が見つかった場合は修正を行い、クリーンになるまで再度 `/review` を実行してから次のステップへ進む。
 
 ## Step 5: PR結果確認 + 完了通知（別スクリプト）
 
@@ -148,7 +148,6 @@ pnpm josh pr
 `pnpm josh followup` の主な動作:
 
 - Cloudflare / CodeRabbit / SonarQube の結果確認（Required チェックのみ待機。CodeQL 等の non-required チェックは待たない）
-- **事前マージレビュー**: `claude -p` で `prompts/review.md` のルーブリックを使った PR diff レビューを実行する。出力を stdout に表示し、高・中優先度の指摘が残っていれば `confirmation` Telegram 通知を送り非ゼロ終了する（`--review-ignore-reason` を渡した場合のみ PR にスキップ理由コメントを投稿して続行）。`claude` CLI が PATH に無い場合はスキップ警告を出して続行する
 - CodeRabbit 指摘の未対応検出（必要なら理由コメント投稿）
 - AI レビューコメントのスキャン（Claude Review / CodeRabbit サマリコメント）。CI ステータスとは独立に実行する。ブロッカー該当コメントが残っている場合は `confirmation` Telegram 通知を送り非ゼロ終了する（`--ai-review-ignore-reason` を渡した場合のみ PR にスキップ理由コメントを投稿して続行）
 - Issue への完了通知投稿（Issue body が空なら body を編集、既にあればコメント追加）
@@ -161,7 +160,6 @@ pnpm josh pr
 - `--notify-message`: Issue への完了コメント本文。定型文ではなく実装内容のサマリーを英語で記載する（例: `"Implemented X:\n- Added ...\n- Changed ..."`）
 - `--coderabbit-ignore-reason`: 未対応を残す場合の理由コメント
 - `--ai-review-ignore-reason`: AI レビュー（Claude Review / CodeRabbit サマリ）の未対応ブロッカーを残す場合の理由コメント
-- `--review-ignore-reason`: 事前マージレビュー（`claude -p`）の未対応指摘を残す場合の理由コメント
 - `--issue-number`: Issue 番号（または位置引数に `"<title> #<number>"`）
 
 例1: 基本（`fullrun` ではマージも込み）
@@ -203,19 +201,6 @@ pnpm josh followup "<issue-title> #<issue-number>" \
   --notify-message "Implemented <title>:
 - Added ..."
 ```
-
-### 事前マージレビュー（`claude -p`）
-
-`pnpm josh followup` は CI 完了後・CodeRabbit/AI レビュースキャンの前に、ローカルで `claude -p` を起動して PR diff のレビューを自動実行する。これは旧来の手動 `/review` ステップを構造的に置き換える仕組みで、レビューがクリーンならエージェントの判断を介さずそのまま完了通知・マージへ進む。
-
-- ルーブリック: `prompts/review.md` をそのまま使用する（Bug risks / Security / Performance / Project conventions / Tests / Comments / Assumptions / Confidence floor / Summary）
-- 入力: `gh pr diff <branch>` で取得した PR の diff
-- 判定: 出力 markdown の各行を走査し `(high)` / `(medium)` タグを数える。`1` 件以上で **ブロッカー扱い**
-- ブロッカーがあって `--review-ignore-reason` 未指定の場合: `confirmation` Telegram 通知を送り、レビュー出力と共に非ゼロ終了する。指摘を修正してコミット・プッシュ後、`pnpm josh followup --merge` を再実行する
-- `--review-ignore-reason "<reason>"` を渡した場合: 指摘内容と共にスキップ理由コメントを PR に投稿してから次のステップへ進む（`--coderabbit-ignore-reason` と同じ流れ）
-- `claude` CLI が PATH に存在しない場合: スキップ警告を出して続行する（後方互換）
-
-スタンドアロンでレビューだけ走らせたい場合は `pnpm josh review`（または `pnpm josh rv`）を使う。`josh followup` を介さず diff レビューのみを実行する。
 
 ### AI レビューコメントのスキャン（Claude Review / CodeRabbit サマリ）
 

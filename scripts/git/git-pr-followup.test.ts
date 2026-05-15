@@ -39,12 +39,6 @@ vi.mock('./git-pr-ai-review', () => ({
 	},
 }))
 
-vi.mock('./git-pr-review', () => ({
-	git_pr_review: {
-		handle_pre_merge_review: vi.fn(),
-	},
-}))
-
 vi.mock('./telegram-notify', () => ({
 	telegram_notify: {
 		send: vi.fn(),
@@ -54,7 +48,6 @@ vi.mock('./telegram-notify', () => ({
 const { git_gh_command } = await import('./git-gh-command')
 const { git_pr_checks } = await import('./git-pr-checks')
 const { git_pr_ai_review } = await import('./git-pr-ai-review')
-const { git_pr_review } = await import('./git-pr-review')
 const { telegram_notify } = await import('./telegram-notify')
 
 const mocked_get_body = vi.mocked(git_gh_command.issue_get_body)
@@ -177,7 +170,6 @@ const BASE_INPUT: FollowupInput = {
 	notify_config: undefined,
 	coderabbit_ignore_reason: undefined,
 	ai_review_ignore_reason: undefined,
-	review_ignore_reason: undefined,
 	is_skip_watch: true,
 	should_merge: false,
 }
@@ -241,34 +233,23 @@ describe('warn_if_missing_closes', () => {
 	})
 })
 
-function setup_gh_command_mocks(): void {
-	vi.mocked(git_gh_command.repo_get_name_with_owner).mockResolvedValue('owner/repo')
-	vi.mocked(git_gh_command.issue_get_title).mockResolvedValue('Test issue')
-	vi.mocked(git_gh_command.pr_get_url).mockResolvedValue(PR_URL)
-	vi.mocked(git_gh_command.pr_get_body).mockResolvedValue('closes #42')
-	vi.mocked(git_gh_command.pr_get_review_comments).mockResolvedValue('[]')
-	vi.mocked(git_gh_command.pr_merge).mockResolvedValue()
-}
-
-function setup_review_step_mocks(): void {
-	vi.mocked(git_pr_checks.wait_for_pr_success).mockResolvedValue({
-		rollup: [],
-		merge_state_status: undefined,
-		review_decision: undefined,
+describe('git_pr_followup.run — --merge flag', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+		vi.mocked(git_gh_command.repo_get_name_with_owner).mockResolvedValue('owner/repo')
+		vi.mocked(git_gh_command.issue_get_title).mockResolvedValue('Test issue')
+		vi.mocked(git_gh_command.pr_get_url).mockResolvedValue(PR_URL)
+		vi.mocked(git_gh_command.pr_get_body).mockResolvedValue('closes #42')
+		vi.mocked(git_pr_checks.wait_for_pr_success).mockResolvedValue({
+			rollup: [],
+			merge_state_status: undefined,
+			review_decision: undefined,
+		})
+		vi.mocked(git_gh_command.pr_get_review_comments).mockResolvedValue('[]')
+		vi.mocked(git_pr_ai_review.handle_ai_review_findings).mockResolvedValue()
+		vi.mocked(telegram_notify.send).mockResolvedValue()
+		vi.mocked(git_gh_command.pr_merge).mockResolvedValue()
 	})
-	vi.mocked(git_pr_ai_review.handle_ai_review_findings).mockResolvedValue()
-	vi.mocked(git_pr_review.handle_pre_merge_review).mockResolvedValue()
-	vi.mocked(telegram_notify.send).mockResolvedValue()
-}
-
-function setup_followup_mocks(): void {
-	vi.clearAllMocks()
-	setup_gh_command_mocks()
-	setup_review_step_mocks()
-}
-
-describe('git_pr_followup.run — merge ordering', () => {
-	beforeEach(setup_followup_mocks)
 
 	it('calls notify before pr_merge when should_merge is true', async () => {
 		await git_pr_followup.run({ ...BASE_INPUT, should_merge: true })
@@ -289,32 +270,5 @@ describe('git_pr_followup.run — merge ordering', () => {
 		await git_pr_followup.run({ ...BASE_INPUT, should_merge: false })
 
 		expect(vi.mocked(git_gh_command.pr_merge)).not.toHaveBeenCalled()
-	})
-})
-
-describe('git_pr_followup.run — pre-merge review wiring', () => {
-	beforeEach(setup_followup_mocks)
-
-	it('runs pre-merge review before CodeRabbit scan and AI review scan', async () => {
-		await git_pr_followup.run({ ...BASE_INPUT, should_merge: true })
-
-		const [review_order] = vi.mocked(git_pr_review.handle_pre_merge_review).mock.invocationCallOrder
-		const [coderabbit_order] = vi.mocked(git_gh_command.pr_get_review_comments).mock
-			.invocationCallOrder
-		const [ai_review_order] = vi.mocked(git_pr_ai_review.handle_ai_review_findings).mock
-			.invocationCallOrder
-
-		expect(review_order).toBeLessThan(coderabbit_order ?? Number.POSITIVE_INFINITY)
-		expect(review_order).toBeLessThan(ai_review_order ?? Number.POSITIVE_INFINITY)
-	})
-
-	it('forwards review_ignore_reason to handle_pre_merge_review', async () => {
-		const reason = 'Tracked in #999'
-
-		await git_pr_followup.run({ ...BASE_INPUT, review_ignore_reason: reason })
-
-		expect(vi.mocked(git_pr_review.handle_pre_merge_review)).toHaveBeenCalledWith(
-			expect.objectContaining({ ignore_reason: reason }),
-		)
 	})
 })

@@ -123,25 +123,13 @@ pnpm josh git -y "title"  # set commit message prefix
 
 ### `josh followup`
 
-AI-assisted PR follow-up workflow: waits for CI, runs a pre-merge review (`claude -p` + `prompts/review.md`), checks AI reviewer findings, sends a completion notification, and optionally merges.
+AI-assisted PR follow-up workflow: waits for CI, checks AI reviewer findings, sends a completion notification, and optionally merges.
 
 ```bash
 pnpm josh followup "PR title #N"
 pnpm josh followup "PR title #N" --merge
 pnpm josh followup "PR title #N" --merge --notify-message "Implemented X:\n- change 1\n- change 2"
 pnpm josh followup "PR title #N" --merge --ai-review-ignore-reason "false positive"
-pnpm josh followup "PR title #N" --merge --review-ignore-reason "Design judgment tracked in #999"
-```
-
-The pre-merge review prints its markdown output to stdout and exits non-zero if any high/medium findings are present. Pass `--review-ignore-reason "<reason>"` to override (the reason is posted to the PR as an audit comment, mirroring `--coderabbit-ignore-reason`). If the `claude` CLI is not installed, the review step is skipped with a warning.
-
-### `josh review` (alias: `josh rv`)
-
-Run the pre-merge review standalone, without going through `josh followup`. Useful for spot-checking a branch's diff before opening a PR.
-
-```bash
-pnpm josh review
-pnpm josh review --branch other-feature
 ```
 
 ### `josh notify`
