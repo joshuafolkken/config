@@ -206,3 +206,20 @@ describe('execute_review — runner failure', () => {
 		await expect(execute_review(dependencies, make_input())).rejects.toThrow('exit 1')
 	})
 })
+
+describe('execute_review — claude unavailable', () => {
+	beforeEach(() => {
+		vi.clearAllMocks()
+	})
+
+	it('skips the runner when claude CLI is unavailable', async () => {
+		const dependencies = make_dependencies({
+			is_claude_available: vi.fn().mockReturnValue(false),
+		})
+
+		await execute_review(dependencies, make_input())
+
+		expect(dependencies.runner).not.toHaveBeenCalled()
+		expect(dependencies.diff_fetcher).not.toHaveBeenCalled()
+	})
+})

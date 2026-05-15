@@ -16,7 +16,6 @@ import { telegram_notify, type TelegramSendInput } from './telegram-notify'
 
 const RUBRIC_RELATIVE_PATH = 'prompts/review.md'
 const PACKAGE_DIR_DEPTH = 2
-const EMPTY_DIFF_THRESHOLD = 0
 const EXIT_OK = 0
 const EMPTY_STRING_LENGTH = 0
 
@@ -179,31 +178,61 @@ async function run_review_call(
 	return await dependencies.runner({ prompt })
 }
 
-async function execute_review(dependencies: ReviewDependencies, input: ReviewInput): Promise<void> {
-	const diff = await dependencies.diff_fetcher(input.branch_name)
+async function fetch_diff_or_skip(
+	dependencies: ReviewDependencies,
+	branch_name: string,
+): Promise<string | undefined> {
+	const diff = await dependencies.diff_fetcher(branch_name)
+	if (diff.trim().length > EMPTY_STRING_LENGTH) return diff
 
-	if (diff.trim().length === EMPTY_DIFF_THRESHOLD) {
-		console.info('⏭  Pre-merge review skipped — diff is empty.')
+	console.info('⏭  Pre-merge review skipped — diff is empty.')
 
-		return
+	return undefined
+}
+
+function build_blocker_dispatch_input(
+	dependencies: ReviewDependencies,
+	input: ReviewInput,
+	parsed: ParsedReview,
+	markdown: string,
+): BlockerDispatchInput {
+	return {
+		parsed,
+		markdown,
+		branch_name: input.branch_name,
+		ignore_reason: input.ignore_reason,
+		context: input.context,
+		pr_commenter: dependencies.pr_commenter,
 	}
+}
 
-	const result = await run_review_call(dependencies, diff)
-
+async function process_review_result(
+	dependencies: ReviewDependencies,
+	input: ReviewInput,
+	result: ReviewRunnerResult,
+): Promise<void> {
 	fail_on_runner_error(result)
 	const parsed = parse_review_markdown(result.stdout)
 
 	print_review_output(result.stdout, parsed)
 	if (!has_blocker(parsed)) return
 
-	await dispatch_blocker({
-		parsed,
-		markdown: result.stdout,
-		branch_name: input.branch_name,
-		ignore_reason: input.ignore_reason,
-		context: input.context,
-		pr_commenter: dependencies.pr_commenter,
-	})
+	await dispatch_blocker(build_blocker_dispatch_input(dependencies, input, parsed, result.stdout))
+}
+
+async function execute_review(dependencies: ReviewDependencies, input: ReviewInput): Promise<void> {
+	if (!dependencies.is_claude_available()) {
+		console.warn('⚠️  Pre-merge review skipped — `claude` CLI is not available on PATH.')
+
+		return
+	}
+
+	const diff = await fetch_diff_or_skip(dependencies, input.branch_name)
+	if (diff === undefined) return
+
+	const result = await run_review_call(dependencies, diff)
+
+	await process_review_result(dependencies, input, result)
 }
 
 const DEFAULT_DEPENDENCIES: ReviewDependencies = {
@@ -215,12 +244,6 @@ const DEFAULT_DEPENDENCIES: ReviewDependencies = {
 }
 
 async function handle_pre_merge_review(input: ReviewInput): Promise<void> {
-	if (!DEFAULT_DEPENDENCIES.is_claude_available()) {
-		console.warn('⚠️  Pre-merge review skipped — `claude` CLI is not available on PATH.')
-
-		return
-	}
-
 	await execute_review(DEFAULT_DEPENDENCIES, input)
 }
 
