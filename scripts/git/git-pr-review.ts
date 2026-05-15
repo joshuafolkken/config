@@ -171,12 +171,14 @@ function print_review_output(markdown: string, parsed: ParsedReview): void {
 	console.info(`Review summary: ${format_finding_summary(parsed)}`)
 }
 
-function fail_on_runner_error(result: ReviewRunnerResult): void {
-	if (result.exit_code === EXIT_OK) return
+function warn_on_runner_error(result: ReviewRunnerResult): boolean {
+	if (result.exit_code === EXIT_OK) return true
 
-	throw new Error(
-		`Pre-merge review runner failed (exit ${String(result.exit_code)}): ${result.stderr}`,
+	console.warn(
+		`⚠️  Pre-merge review skipped — \`claude -p\` exited ${String(result.exit_code)}: ${result.stderr.trim() || '(no stderr)'}`,
 	)
+
+	return false
 }
 
 async function run_review_call(
@@ -222,7 +224,7 @@ async function process_review_result(
 	input: ReviewInput,
 	result: ReviewRunnerResult,
 ): Promise<void> {
-	fail_on_runner_error(result)
+	if (!warn_on_runner_error(result)) return
 	const parsed = parse_review_markdown(result.stdout)
 
 	print_review_output(result.stdout, parsed)

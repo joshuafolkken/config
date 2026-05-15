@@ -198,12 +198,23 @@ describe('execute_review — runner failure', () => {
 		vi.clearAllMocks()
 	})
 
-	it('throws when runner exits non-zero', async () => {
+	it('skips with a warning when runner exits non-zero (does not throw)', async () => {
 		const dependencies = make_dependencies({
 			runner: vi.fn().mockResolvedValue({ stdout: '', stderr: 'auth failed', exit_code: 1 }),
 		})
 
-		await expect(execute_review(dependencies, make_input())).rejects.toThrow('exit 1')
+		await expect(execute_review(dependencies, make_input())).resolves.toBeUndefined()
+		expect(dependencies.pr_commenter).not.toHaveBeenCalled()
+	})
+
+	it('does not run blocker dispatch when runner fails', async () => {
+		const dependencies = make_dependencies({
+			runner: vi.fn().mockResolvedValue({ stdout: '', stderr: '', exit_code: 1 }),
+		})
+
+		await execute_review(dependencies, make_input())
+
+		expect(dependencies.pr_commenter).not.toHaveBeenCalled()
 	})
 })
 
