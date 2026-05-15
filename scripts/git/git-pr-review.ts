@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { git_gh_command } from './git-gh-command'
@@ -15,14 +15,21 @@ import { run_claude_review, type ReviewRunnerResult } from './git-pr-review-runn
 import { telegram_notify, type TelegramSendInput } from './telegram-notify'
 
 const RUBRIC_RELATIVE_PATH = 'prompts/review.md'
-const PACKAGE_DIR_DEPTH = 2
+const PACKAGE_MARKER = 'package.json'
 const EXIT_OK = 0
 const EMPTY_STRING_LENGTH = 0
 
 function resolve_package_directory(): string {
-	const here = path.dirname(fileURLToPath(import.meta.url))
+	let current = path.dirname(fileURLToPath(import.meta.url))
+	let parent = path.dirname(current)
 
-	return path.join(here, ...Array.from({ length: PACKAGE_DIR_DEPTH }, () => '..'))
+	while (current !== parent) {
+		if (existsSync(path.join(current, PACKAGE_MARKER))) return current
+		current = parent
+		parent = path.dirname(current)
+	}
+
+	throw new Error(`Unable to locate ${PACKAGE_MARKER} above ${fileURLToPath(import.meta.url)}`)
 }
 
 type ReviewRunner = (input: { prompt: string }) => Promise<ReviewRunnerResult>
