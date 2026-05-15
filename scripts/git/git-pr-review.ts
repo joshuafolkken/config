@@ -261,17 +261,7 @@ async function handle_pre_merge_review(input: ReviewInput): Promise<void> {
 const git_pr_review = {
 	handle_pre_merge_review,
 	execute_review,
-	build_review_prompt,
-	build_blocker_error,
-	build_ignore_comment,
 }
 
-export {
-	git_pr_review,
-	execute_review,
-	build_review_prompt,
-	build_blocker_error,
-	build_ignore_comment,
-	has_ignore_reason,
-}
+export { git_pr_review, execute_review }
 export type { ReviewDependencies, ReviewInput, ReviewRunner, DiffFetcher, PrCommenter }
