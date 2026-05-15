@@ -207,9 +207,21 @@ Every `fullrun` / `fullrun new` invocation uses `pnpm josh followup --merge`, wh
 
 - **AI review findings are checked automatically.** If blockers are found, it sends a `confirmation` Telegram and exits non-zero — fix the findings and re-run.
 - **CodeRabbit rate-limit is not a finding.** Treat it as "no findings" and proceed.
+- **Verify CodeRabbit findings before bypassing.** When CodeRabbit posts a substantive finding, do not pass `--coderabbit-ignore-reason` reflexively — first verify whether the finding is correct. Concrete example: CodeRabbit may flag a GitHub Actions SHA pin like `pnpm/action-setup@<sha> # v6.0.8` as "not matching the tag", because it queried `gh api repos/<owner>/<repo>/git/ref/tags/v6.0.8` which returns the **annotated-tag-object SHA**, not the **commit SHA** that the tag points to. GitHub Actions pins use the commit SHA. Confirm with `gh api repos/<owner>/<repo>/commits/<tag> --jq '.sha'` — if that matches the pinned SHA, the finding is a false positive. Only then bypass with `--coderabbit-ignore-reason "<verification-based-reason>"`, citing the verification command and its output.
 - Do **not** pass `--delete-branch` unless the user asks.
 - If the merge fails, report the reason and stop — do not retry with different flags or bypass protections.
 - **If the user wants to skip the merge step**, use `kickoff` (plan-only) or say "do not merge" in the same turn. In that case, pass `--no-merge` to `pnpm josh followup`. Outside a `fullrun` invocation, never run `gh pr merge` on your own.
+
+#### Chain rule: `/review` → `followup --merge` is a single atomic step
+
+Within `fullrun` / `fullrun new` / `queue`, the `/review` skill output is **not** a turn boundary. The skill returns a polished Markdown review with sections and a final recommendation — but this is an intermediate step, not a finished deliverable.
+
+- **`/review` returns with no high/medium findings** (low findings only or none): immediately run `pnpm josh followup "<title> #<N>" --merge --notify-message "..."` in the same response, without pausing for user input.
+- **`/review` finds high/medium issues**: fix them, re-run `/review`, then continue. Low findings may be skipped with a one-line reason per the Pre-commit Self-Review rule.
+- **The workflow ends only when** (a) the PR is merged and the Telegram completion notification has been sent, or (b) a genuine blocker requires user input (a CodeRabbit / Claude Review substantive finding that cannot be auto-verified, the managed config-file confirmation gate, or a CI failure that needs user judgement).
+- **Anti-pattern**: presenting `/review`'s "Approve for merge" recommendation to the user and stopping. The user invoked `fullrun`; merging is part of that invocation. Continue to `followup --merge`.
+
+This rule applies regardless of model (Claude / Gemini / Cursor) or account; the workflow is portable and the chain must hold across environments.
 
 #### Completion notifications: always via `pnpm josh followup`
 
