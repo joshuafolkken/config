@@ -8,8 +8,12 @@ allowBuilds:
   '@joshuafolkken/kit': false # project postinstall handles lefthook install
 
 # Security fixes often require same-day vite releases; minimum-release-age in .npmrc would block them.
+# `@types/node` and `tsx` are also excluded so routine Dependabot-style bumps are not
+# delayed by the minimum-release-age window.
 minimumReleaseAgeExclude:
   - vite
+  - '@types/node'
+  - tsx
 
 overrides:
   svelte: ^5.55.7
