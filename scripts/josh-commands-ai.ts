@@ -11,6 +11,11 @@ const AI_COMMANDS: Record<string, CommandEntry> = {
 		description: 'Fetch GitHub issue details',
 		category: 'AI tools',
 	},
+	review: {
+		script: 'scripts-ai/review.ts',
+		description: 'Run pre-merge review (claude -p) on current PR diff',
+		category: 'AI tools',
+	},
 }
 
 export { AI_COMMANDS }

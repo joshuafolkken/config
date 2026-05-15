@@ -20,6 +20,7 @@ interface CliArguments {
 		'notify-mentions'?: string
 		'coderabbit-ignore-reason'?: string
 		'ai-review-ignore-reason'?: string
+		'review-ignore-reason'?: string
 		'skip-watch'?: boolean
 		'no-merge'?: boolean
 		merge?: boolean
@@ -45,6 +46,8 @@ Options:
   --coderabbit-ignore-reason   Reason text when keeping CodeRabbit findings unresolved
   --ai-review-ignore-reason    Reason text when keeping AI reviewer (Claude Review / CodeRabbit
                                summary) findings unresolved
+  --review-ignore-reason       Reason text when keeping pre-merge review (claude -p) findings
+                               unresolved
   --skip-watch                 Skip "gh pr checks --watch" and only evaluate latest status
   --no-merge                   Skip merging the PR (merge is on by default)
   --merge                      (Deprecated — merge is now the default; kept for backward compatibility)
@@ -62,6 +65,7 @@ function parse_cli_arguments(): CliArguments {
 			'notify-mentions': { type: 'string' },
 			'coderabbit-ignore-reason': { type: 'string' },
 			'ai-review-ignore-reason': { type: 'string' },
+			'review-ignore-reason': { type: 'string' },
 			'skip-watch': { type: 'boolean' },
 			'no-merge': { type: 'boolean' },
 			merge: { type: 'boolean' },
@@ -115,6 +119,7 @@ async function main(): Promise<void> {
 		notify_config: build_notify_config(cli.values),
 		coderabbit_ignore_reason: cli.values['coderabbit-ignore-reason'],
 		ai_review_ignore_reason: cli.values['ai-review-ignore-reason'],
+		review_ignore_reason: cli.values['review-ignore-reason'],
 		is_skip_watch: cli.values['skip-watch'] === true,
 		should_merge: resolve_should_merge(cli.values),
 	})
